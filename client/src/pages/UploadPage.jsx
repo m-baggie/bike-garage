@@ -13,7 +13,7 @@ const styles = {
     padding: '1rem',
   },
   card: {
-    background: 'var(--card-bg, #1e1e1e)',
+    background: 'var(--card-bg, #e7e7e7)',
     border: '1px solid rgba(255,255,255,0.12)',
     borderRadius: '12px',
     padding: '2rem',

@@ -260,7 +260,7 @@ function PartDetailPanel({ part, pricingState, onClose }) {
 
 const dp = {
   panel: {
-    background: 'var(--card-bg, #1e1e1e)',
+    background: 'var(--card-bg, #e7e7e7)',
     border: '1px solid rgba(255,255,255,0.18)',
     borderRadius: '10px',
     padding: '1rem',
@@ -309,7 +309,7 @@ const s = {
   },
   heading: { margin: '0 0 1rem', fontSize: '1.75rem', fontWeight: 700 },
   section: {
-    background: 'var(--card-bg, #1e1e1e)',
+    background: 'var(--card-bg, #e7e7e7)',
     border: '1px solid rgba(255,255,255,0.12)',
     borderRadius: '12px',
     padding: '1.5rem',
