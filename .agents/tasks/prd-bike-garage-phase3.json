@@ -1,0 +1,341 @@
+{
+  "version": 1,
+  "project": "Bike Garage - Phase 3 Persistence and Accounts",
+  "overview": "Add user authentication, a database, proper image storage, and a 'Garage' concept where users can manage multiple bike profiles and access their full analysis history. Deploy the app to Vercel.",
+  "goals": [
+    "Allow users to create accounts and log in",
+    "Persist analyses and maintenance history per bike",
+    "Support multiple bike profiles per user (the 'Garage')",
+    "Migrate image storage from temp files to a proper storage solution",
+    "Deploy the full app to Vercel"
+  ],
+  "nonGoals": [
+    "No social features (sharing, following other users)",
+    "No shop/business multi-tenancy or customer management",
+    "No payment or subscription features",
+    "No mobile native app — web only"
+  ],
+  "successMetrics": [
+    "Users can register, log in, and log out successfully",
+    "A saved analysis is retrievable after the browser is closed and reopened",
+    "Users can manage 2+ bike profiles from their Garage",
+    "App is live and functional on Vercel with a public URL"
+  ],
+  "openQuestions": [
+    "What image storage provider should be used on Vercel? (Vercel Blob, Cloudinary, S3 — default: Vercel Blob)",
+    "Should analyses be shareable via a public link in a future phase?",
+    "Password reset / forgot password flow — in scope for Phase 3 or deferred?"
+  ],
+  "stack": {
+    "framework": "React (Vite) frontend + Node.js Express backend",
+    "hosting": "Vercel (backend as Vercel Serverless Functions or a separate Node service)",
+    "database": "PostgreSQL via Supabase (managed, free tier) or SQLite via better-sqlite3 for local dev",
+    "auth": "JWT-based auth — bcrypt for password hashing, jsonwebtoken for tokens, tokens stored in httpOnly cookies",
+    "imageStorage": "Vercel Blob (or equivalent) for persistent image storage; multer temp storage retained for local dev",
+    "orm": "Prisma (schema-first, works with Postgres and SQLite)"
+  },
+  "routes": [
+    { "path": "/", "name": "Home", "purpose": "Landing page — sign up CTA for logged-out users, redirect to /garage for logged-in users" },
+    { "path": "/register", "name": "Register", "purpose": "New user account creation form" },
+    { "path": "/login", "name": "Login", "purpose": "Email + password login form" },
+    { "path": "/garage", "name": "My Garage", "purpose": "Grid of user's bike profiles with add new bike option" },
+    { "path": "/garage/:bikeId", "name": "Bike Profile", "purpose": "Single bike page: photo, metadata, analysis history list" },
+    { "path": "/garage/:bikeId/analyses/:analysisId", "name": "Analysis Detail", "purpose": "Full analysis view (Phase 1+2 results UI) for a saved analysis" },
+    { "path": "/upload", "name": "Upload / Analyze", "purpose": "Photo upload form — prompts logged-in user to pick or create a bike profile to save to" },
+    { "path": "/results", "name": "Results (transient)", "purpose": "Immediate analysis results — user prompted to save to a bike profile" }
+  ],
+  "uiNotes": [
+    "Garage page: card grid layout, each card shows bike name/photo thumbnail, last analyzed date, overall condition badge",
+    "Add bike card: dashed border 'Add a Bike' prompt",
+    "Bike Profile page: hero photo, bike metadata, chronological list of analyses (date, overall condition, parts count)",
+    "Analysis Detail page: same interactive UI as Phase 2 results page, read-only (no reanalysis from history view)",
+    "Upload flow update: after analysis completes, show 'Save to Garage' prompt with bike selector (existing or new)",
+    "Auth pages: minimal centered card, email + password fields, submit button, link to toggle between login/register",
+    "Global nav: logo left, 'My Garage' link, user avatar/name dropdown (logout) when logged in; Login/Register links when logged out",
+    "Protected routes redirect to /login if no valid session"
+  ],
+  "dataModel": [
+    {
+      "entity": "User",
+      "fields": ["id", "email", "passwordHash", "createdAt", "updatedAt"]
+    },
+    {
+      "entity": "Bike",
+      "fields": ["id", "userId (FK)", "name", "brand", "model", "type", "year", "color", "frame_material", "notes", "coverImageUrl", "createdAt", "updatedAt"]
+    },
+    {
+      "entity": "Analysis",
+      "fields": ["id", "bikeId (FK)", "userId (FK)", "imageUrl", "overallCondition", "summary", "rawClaudeJson (TEXT)", "createdAt"]
+    },
+    {
+      "entity": "Part",
+      "fields": ["id", "analysisId (FK)", "name", "componentGroup", "brand", "model", "condition", "conditionNotes", "priority", "priorityLabel", "searchQuery", "visibleInImage", "boundingBox (JSON)", "createdAt"]
+    },
+    {
+      "entity": "PricingResult",
+      "fields": ["id", "partId (FK)", "title", "price", "availability", "url", "scrapedAt"]
+    }
+  ],
+  "rules": [
+    "All protected API routes require a valid JWT in the Authorization header or httpOnly cookie",
+    "Users can only access their own bikes, analyses, and parts — no cross-user data access",
+    "Passwords must be at least 8 characters; hashed with bcrypt (cost factor 12)",
+    "JWT expiry: 7 days; no refresh token in Phase 3 (acceptable for MVP)",
+    "On save, image is uploaded to Vercel Blob and the returned URL stored in Analysis.imageUrl",
+    "Temp local file is deleted after successful upload to Vercel Blob",
+    "A Bike can have many Analyses; deleting a Bike cascades to delete all its Analyses and Parts",
+    "Saving an analysis to a bike also updates the Bike's coverImageUrl if the bike has no cover yet",
+    "Pricing results are saved at analysis time; they are not re-scraped when viewing history"
+  ],
+  "qualityGates": [
+    "npm run lint",
+    "npm test"
+  ],
+  "stories": [
+    {
+      "id": "US-001",
+      "title": "[Setup] Install Phase 3 dependencies and configure Prisma",
+      "status": "open",
+      "dependsOn": [],
+      "description": "As a developer, I want Prisma ORM and auth dependencies installed and configured so the database schema can be defined and migrations run.",
+      "acceptanceCriteria": [
+        "Install in /server: `npm install prisma @prisma/client bcrypt jsonwebtoken cookie-parser`",
+        "Install dev dependency: `npm install --save-dev @types/bcrypt @types/jsonwebtoken`",
+        "Run `npx prisma init` to create prisma/schema.prisma and .env DATABASE_URL entry",
+        "schema.prisma datasource configured for postgresql (Supabase) with fallback sqlite for local dev via DATABASE_URL env var",
+        "server/.env.example updated with: DATABASE_URL, JWT_SECRET, BLOB_READ_WRITE_TOKEN",
+        "Install Vercel Blob in /server: `npm install @vercel/blob`",
+        "README updated with: how to set DATABASE_URL, how to run `npx prisma migrate dev`, how to run `npx prisma studio`",
+        "Example: running `npx prisma migrate dev --name init` with a valid DATABASE_URL succeeds",
+        "Negative case: missing DATABASE_URL → `npx prisma migrate dev` fails with clear error, not a silent hang"
+      ]
+    },
+    {
+      "id": "US-002",
+      "title": "Define database schema and run initial migration",
+      "status": "open",
+      "dependsOn": ["US-001"],
+      "description": "As a developer, I want the full database schema defined in Prisma and migrated so all entities are ready to use.",
+      "acceptanceCriteria": [
+        "prisma/schema.prisma defines models: User, Bike, Analysis, Part, PricingResult with all fields from the data model section",
+        "Relations: User hasMany Bike, Bike hasMany Analysis, Analysis hasMany Part, Part hasMany PricingResult",
+        "Cascade deletes configured: deleting Bike deletes Analyses; deleting Analysis deletes Parts; deleting Part deletes PricingResults",
+        "All id fields are cuid() or uuid() auto-generated",
+        "createdAt and updatedAt fields use @default(now()) and @updatedAt where applicable",
+        "boundingBox stored as Json type in Prisma schema",
+        "rawClaudeJson stored as String (TEXT) type",
+        "Migration created and applied: `npx prisma migrate dev --name init`",
+        "npm test includes a test that Prisma client can connect to the database and query User count without error",
+        "Example: after migration, `npx prisma studio` shows all 5 tables populated with correct columns",
+        "Negative case: schema with a missing required field → `prisma migrate dev` fails with a descriptive error before touching the DB"
+      ]
+    },
+    {
+      "id": "US-003",
+      "title": "User registration and login API endpoints",
+      "status": "open",
+      "dependsOn": ["US-002"],
+      "description": "As a new user, I want to create an account and log in so I can save my bike analyses.",
+      "acceptanceCriteria": [
+        "POST /api/auth/register accepts { email, password } — creates user, returns JWT in httpOnly cookie + { user: { id, email } }",
+        "POST /api/auth/login accepts { email, password } — validates credentials, returns JWT in httpOnly cookie + { user: { id, email } }",
+        "POST /api/auth/logout clears the auth cookie and returns 200",
+        "GET /api/auth/me returns { user: { id, email } } if authenticated, 401 if not",
+        "Password hashed with bcrypt cost factor 12 before storing",
+        "JWT signed with JWT_SECRET env var, expires in 7 days",
+        "Registration returns 409 if email already exists",
+        "Registration returns 400 if password < 8 characters",
+        "Login returns 401 for invalid credentials (do not reveal whether email exists)",
+        "npm test includes tests for: successful register, duplicate email 409, successful login, invalid password 401, GET /api/auth/me with valid token",
+        "Example: POST /api/auth/register with new email → 201 with user object and cookie set",
+        "Negative case: POST /api/auth/login with wrong password → 401 'Invalid credentials' (no stack trace exposed)"
+      ]
+    },
+    {
+      "id": "US-004",
+      "title": "Auth middleware for protected routes",
+      "status": "open",
+      "dependsOn": ["US-003"],
+      "description": "As the backend, I want an auth middleware that protects routes requiring a logged-in user.",
+      "acceptanceCriteria": [
+        "requireAuth middleware reads JWT from httpOnly cookie (or Authorization: Bearer header as fallback)",
+        "Valid JWT → decodes payload, attaches { userId, email } to req.user, calls next()",
+        "Missing or invalid JWT → returns 401 { error: 'Unauthorized' }",
+        "Expired JWT → returns 401 { error: 'Session expired, please log in again' }",
+        "requireAuth is applied to all /api/garage, /api/bikes, /api/analyses routes",
+        "npm test includes tests for: request with valid token passes through, request with no token returns 401, request with expired token returns 401",
+        "Example: GET /api/garage with valid cookie → req.user populated, handler proceeds",
+        "Negative case: GET /api/garage with tampered JWT signature → 401 Unauthorized"
+      ]
+    },
+    {
+      "id": "US-005",
+      "title": "Bike profile CRUD API",
+      "status": "open",
+      "dependsOn": ["US-004"],
+      "description": "As a user, I want to create, view, update, and delete bike profiles in my garage so I can manage my collection.",
+      "acceptanceCriteria": [
+        "POST /api/bikes — create a new bike: { name, brand, model, type, year, color, frame_material, notes } → 201 with bike object",
+        "GET /api/bikes — list all bikes for authenticated user → 200 with array of bike objects (newest first)",
+        "GET /api/bikes/:bikeId — get single bike with analyses summary (id, createdAt, overallCondition, parts count) → 200 or 404",
+        "PATCH /api/bikes/:bikeId — update bike metadata fields → 200 with updated bike",
+        "DELETE /api/bikes/:bikeId — delete bike and all cascaded analyses → 204",
+        "All endpoints enforce ownership: user can only access their own bikes (return 404 for other users' bikes, not 403)",
+        "name field is required for bike creation; all other fields optional",
+        "npm test includes tests for: create bike, list bikes (empty and populated), get bike, update bike, delete bike, attempt to access another user's bike → 404",
+        "Example: POST /api/bikes { name: 'Trek Road Bike', brand: 'Trek' } → 201 with id and createdAt",
+        "Negative case: DELETE /api/bikes/:otherUsersBikeId → 404 (not 403, to avoid revealing existence)"
+      ]
+    },
+    {
+      "id": "US-006",
+      "title": "Save analysis to database with image upload to Vercel Blob",
+      "status": "open",
+      "dependsOn": ["US-004", "US-005"],
+      "description": "As a user, I want to save an analysis result to a specific bike profile so I can access it later.",
+      "acceptanceCriteria": [
+        "POST /api/bikes/:bikeId/analyses accepts the Claude analysis JSON + pricing results in the request body",
+        "Image file is uploaded to Vercel Blob using BLOB_READ_WRITE_TOKEN; returned URL stored in Analysis.imageUrl",
+        "Temp local file deleted after successful Blob upload",
+        "Analysis record created in DB with: bikeId, userId, imageUrl, overallCondition, summary, rawClaudeJson",
+        "Each part in the analysis creates a Part record linked to the analysis",
+        "Each pricing result for each part creates a PricingResult record linked to the part",
+        "If the bike has no coverImageUrl yet, set it to the analysis imageUrl",
+        "Returns 201 with { analysisId } on success",
+        "Returns 404 if bikeId doesn't belong to the authenticated user",
+        "npm test includes tests for: successful save returns 201 with analysisId, save to non-owned bike returns 404",
+        "Example: POST /api/bikes/abc123/analyses with full analysis payload → 201 { analysisId: 'xyz789' }",
+        "Negative case: Vercel Blob upload fails → return 502, do not create a partial DB record"
+      ]
+    },
+    {
+      "id": "US-007",
+      "title": "Analysis history retrieval API",
+      "status": "open",
+      "dependsOn": ["US-006"],
+      "description": "As a user, I want to retrieve past analyses for a bike so I can track its maintenance history over time.",
+      "acceptanceCriteria": [
+        "GET /api/bikes/:bikeId/analyses — list all analyses for a bike (newest first): [{ id, createdAt, overallCondition, summary, partsCount }]",
+        "GET /api/bikes/:bikeId/analyses/:analysisId — full analysis detail including all parts and pricing results",
+        "Both endpoints enforce ownership (return 404 for other users' bikes/analyses)",
+        "Full analysis response shape matches the same structure as the Phase 1 POST /api/analyze response so the frontend Results page can render it without changes",
+        "npm test includes tests for: list analyses (empty and populated), get full analysis detail, access control",
+        "Example: GET /api/bikes/abc123/analyses → array of 3 analyses with createdAt dates and condition",
+        "Negative case: GET /api/bikes/abc123/analyses/nonexistent → 404"
+      ]
+    },
+    {
+      "id": "US-008",
+      "title": "Frontend auth flow — register, login, logout, protected routes",
+      "status": "open",
+      "dependsOn": ["US-003"],
+      "description": "As a user, I want to register, log in, and log out from the frontend with protected routes that redirect to login when unauthenticated.",
+      "acceptanceCriteria": [
+        "RegisterPage at /register: email + password fields, submit calls POST /api/auth/register, redirects to /garage on success",
+        "LoginPage at /login: email + password fields, submit calls POST /api/auth/login, redirects to /garage on success",
+        "AuthContext (React context) provides { user, login, logout, isLoading } to the whole app",
+        "On app load, GET /api/auth/me is called to restore session; isLoading=true until response received",
+        "Logout calls POST /api/auth/logout and clears user from context, redirects to /login",
+        "ProtectedRoute wrapper component: redirects to /login if user is null and isLoading is false",
+        "/garage, /garage/:bikeId, /upload wrapped in ProtectedRoute",
+        "Global nav renders Login/Register links when logged out; user email + Logout when logged in",
+        "npm run lint passes",
+        "Example: visit /garage while logged out → redirected to /login → login → redirected back to /garage",
+        "Negative case: register with already-used email → inline error 'An account with this email already exists'"
+      ]
+    },
+    {
+      "id": "US-009",
+      "title": "Garage page — bike profile grid",
+      "status": "open",
+      "dependsOn": ["US-005", "US-008"],
+      "description": "As a user, I want to see all my bike profiles on the Garage page so I can quickly navigate to any bike.",
+      "acceptanceCriteria": [
+        "GaragePage at /garage fetches GET /api/bikes and displays bikes as a responsive card grid",
+        "Each bike card shows: cover image (or a placeholder icon), bike name, brand+model, last analyzed date (from most recent analysis), overall condition badge",
+        "Clicking a bike card navigates to /garage/:bikeId",
+        "An 'Add a Bike' card (dashed border) navigates to a simple create-bike modal or inline form",
+        "Create bike form: name (required), brand, model, type dropdown, year, color, frame_material, notes — submit calls POST /api/bikes",
+        "New bike appears in the grid without a full page reload",
+        "Empty state: 'Your garage is empty — add your first bike!' with a prominent Add button",
+        "npm run lint passes",
+        "Example: garage with 2 bikes → 2 cards + 1 add card rendered in grid",
+        "Negative case: GET /api/bikes fails with 500 → show 'Failed to load your garage. Please refresh.' error state"
+      ]
+    },
+    {
+      "id": "US-010",
+      "title": "Bike profile page with analysis history",
+      "status": "open",
+      "dependsOn": ["US-007", "US-009"],
+      "description": "As a user, I want to view a single bike's profile page with its photo, metadata, and a history of all its analyses so I can track changes over time.",
+      "acceptanceCriteria": [
+        "BikeProfilePage at /garage/:bikeId fetches GET /api/bikes/:bikeId and GET /api/bikes/:bikeId/analyses",
+        "Hero section: bike cover photo, bike name, metadata (brand, model, type, year, color, frame_material)",
+        "Edit button opens an inline form to PATCH bike metadata",
+        "Delete button shows a confirmation dialog, then calls DELETE /api/bikes/:bikeId and redirects to /garage",
+        "Analysis history section: chronological list (newest first) with date, overall condition badge, summary snippet, parts count",
+        "Clicking an analysis entry navigates to /garage/:bikeId/analyses/:analysisId",
+        "Empty analysis history: 'No analyses yet — analyze this bike to start tracking maintenance'",
+        "npm run lint passes",
+        "Example: bike with 3 analyses → 3 entries shown newest first with dates and condition badges",
+        "Negative case: navigate to /garage/nonexistent → 404 page with 'Bike not found' and link back to /garage"
+      ]
+    },
+    {
+      "id": "US-011",
+      "title": "Analysis detail page — view saved analysis with Phase 2 interactive UI",
+      "status": "open",
+      "dependsOn": ["US-007", "US-010"],
+      "description": "As a user, I want to view a previously saved analysis with the full Phase 2 interactive UI so I can review part conditions and pricing as of that analysis date.",
+      "acceptanceCriteria": [
+        "AnalysisDetailPage at /garage/:bikeId/analyses/:analysisId fetches GET /api/bikes/:bikeId/analyses/:analysisId",
+        "Renders the same Results UI as Phase 2: bike photo with part overlays, detail panel, sortable parts table with pricing",
+        "Reanalyze button is NOT shown on history view (read-only)",
+        "Page title shows the analysis date: 'Analysis from March 12, 2026'",
+        "Back breadcrumb: '← Back to [Bike Name]' navigates to /garage/:bikeId",
+        "Results UI reuses Phase 2 components without duplication — components accept data as props, not from router state",
+        "npm run lint passes",
+        "Example: navigate to saved analysis → full interactive results UI loads with photo overlays and historical pricing",
+        "Negative case: fetch fails → error state with 'Could not load this analysis' and retry button"
+      ]
+    },
+    {
+      "id": "US-012",
+      "title": "Save to Garage flow — prompt user to save after analysis",
+      "status": "open",
+      "dependsOn": ["US-006", "US-008"],
+      "description": "As a logged-in user, I want to be prompted to save my analysis results to a bike profile immediately after analysis completes so my data isn't lost.",
+      "acceptanceCriteria": [
+        "After POST /api/analyze returns on the upload/results flow, a 'Save to Garage' banner appears at the top of the Results page",
+        "Banner contains a bike selector dropdown (populated from GET /api/bikes) and a 'Save' button",
+        "Option to create a new bike inline from the selector (opens a minimal create-bike form)",
+        "Clicking Save calls POST /api/bikes/:bikeId/analyses with the current analysis data",
+        "On success: banner updates to 'Saved! View in Garage →' with a link to the bike profile",
+        "On failure: banner shows 'Save failed. Try again.'",
+        "If user is not logged in, banner shows 'Log in to save this analysis to your Garage' with a Login link",
+        "npm run lint passes",
+        "Example: logged-in user completes analysis → banner shows → selects 'Trek Road Bike' → clicks Save → success message with link",
+        "Negative case: user not logged in → banner shows login prompt, Save button not visible"
+      ]
+    },
+    {
+      "id": "US-013",
+      "title": "Vercel deployment — frontend and backend",
+      "status": "open",
+      "dependsOn": ["US-006", "US-012"],
+      "description": "As a developer, I want the app deployed to Vercel with all environment variables configured so users can access it publicly.",
+      "acceptanceCriteria": [
+        "vercel.json created at project root configuring: frontend (React/Vite) as static output, backend (Express) as a Vercel Serverless Function or rewrites to /api/*",
+        "Alternative: backend deployed as a separate Vercel project if Express-as-serverless is not viable",
+        "Vercel project environment variables set: ANTHROPIC_API_KEY, DATABASE_URL (Supabase prod), JWT_SECRET, BLOB_READ_WRITE_TOKEN, CLIENT_URL",
+        "Prisma migration run against production Supabase database before first deploy",
+        "npm run build succeeds for both client and server without errors",
+        "Production deploy accessible at a public Vercel URL",
+        "Full end-to-end smoke test on production: register → add bike → upload photo → analyze → save to garage → view history",
+        "Example: visiting the Vercel URL → app loads, register works, analysis flow works end-to-end",
+        "Negative case: missing ANTHROPIC_API_KEY in Vercel env vars → /api/analyze returns 500 with 'Configuration error' (not the raw key error)"
+      ]
+    }
+  ]
+}

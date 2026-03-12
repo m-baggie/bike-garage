@@ -1,0 +1,368 @@
+{
+  "version": 1,
+  "project": "Bike Garage - Phase 1 MVP",
+  "overview": "A stateless web app where users upload a bike photo, Claude Vision analyzes it and returns structured part/condition/priority data, and the backend scrapes Performance Bicycle for real pricing on identified parts. No persistence, no auth, local deployment only.",
+  "goals": [
+    "Accept a bike photo upload and store it as a temp file",
+    "Send the image to Claude Vision and receive structured JSON with parts, condition, priority, and bike metadata",
+    "Scrape Performance Bicycle for real pricing and availability on each identified part",
+    "Render a clean desktop-first results page showing analysis and pricing"
+  ],
+  "nonGoals": [
+    "No user authentication",
+    "No database or persistent storage",
+    "No image storage beyond temp files",
+    "No deployment beyond localhost",
+    "No interactive click-on-image features (Phase 2)",
+    "No user accounts or saved analyses (Phase 3)"
+  ],
+  "successMetrics": [
+    "Photo uploads successfully and reaches the backend",
+    "Claude Vision returns valid structured JSON matching the defined schema",
+    "At least one Performance Bicycle pricing result renders per identified part",
+    "Full analysis and pricing results display cleanly on a 1280px desktop viewport"
+  ],
+  "openQuestions": [
+    "Should scraping failures for individual parts be silent (show 'unavailable') or surface an error?",
+    "Is there a maximum number of parts to scrape pricing for per analysis (rate/time concern)?"
+  ],
+  "stack": {
+    "framework": "React (Vite) frontend + Node.js Express backend",
+    "hosting": "localhost (development only)",
+    "database": "none",
+    "auth": "none",
+    "imageStorage": "OS temp directory via multer",
+    "vision": "Claude Vision API (claude-sonnet-4-5 or latest model with vision)",
+    "scraping": "Cheerio (HTML parsing) or Puppeteer (JS-rendered fallback)"
+  },
+  "routes": [
+    { "path": "/", "name": "Home / Upload", "purpose": "Photo upload form; entry point for analysis" },
+    { "path": "/results", "name": "Results", "purpose": "Displays bike metadata, parts analysis, and Performance Bicycle pricing" }
+  ],
+  "uiNotes": [
+    "Desktop-first layout, minimum 1280px comfortable; responsive at ≥768px",
+    "Upload page: centered card with drag-and-drop or file picker, upload button",
+    "Results page: two-column layout — left: uploaded photo + bike metadata; right: scrollable parts table with condition badge, priority badge, and pricing",
+    "Condition badges: excellent=green, good=blue, fair=yellow, poor=red",
+    "Priority badges: 1=Immediate (red), 2=Soon (orange), 3=Monitor (yellow), 4=OK (blue), 5=New (green)",
+    "Loading state shown while analysis and scraping are in progress",
+    "Error state shown if Claude or scraping fails"
+  ],
+  "dataModel": [
+    {
+      "entity": "BikeAnalysis (in-memory, not persisted)",
+      "fields": ["bike", "parts", "overall_condition", "summary"]
+    },
+    {
+      "entity": "Bike",
+      "fields": ["brand", "model", "type", "year", "color", "frame_material", "notes"]
+    },
+    {
+      "entity": "Part",
+      "fields": [
+        "id",
+        "name",
+        "component_group",
+        "brand",
+        "model",
+        "condition",
+        "condition_notes",
+        "priority",
+        "priority_label",
+        "search_query",
+        "visible_in_image"
+      ]
+    },
+    {
+      "entity": "PricingResult",
+      "fields": ["part_id", "part_name", "search_query", "results[{title, price, availability, url}]"]
+    }
+  ],
+  "importFormat": {
+    "description": "Not applicable — input is a photo file upload (multipart/form-data), not structured data"
+  },
+  "claudeVisionSchema": {
+    "description": "Structured JSON Claude Vision must return. Backend validates this shape before scraping.",
+    "example": {
+      "bike": {
+        "brand": "Trek",
+        "model": "Domane AL 2",
+        "type": "road",
+        "year": "2019",
+        "color": "Matte Black",
+        "frame_material": "aluminum",
+        "notes": "Clean frame with minor handlebar tape wear"
+      },
+      "parts": [
+        {
+          "id": "part-001",
+          "name": "Rear Derailleur",
+          "component_group": "Drivetrain",
+          "brand": "Shimano",
+          "model": "Claris RD-R2000",
+          "condition": "fair",
+          "condition_notes": "Visible rust on jockey wheels, cable slightly frayed",
+          "priority": 2,
+          "priority_label": "soon",
+          "search_query": "Shimano Claris rear derailleur 8-speed",
+          "visible_in_image": true
+        }
+      ],
+      "overall_condition": "good",
+      "summary": "Road bike in generally good condition. Drivetrain shows wear and should be serviced soon."
+    },
+    "priorityScale": {
+      "1": "Immediate — safety concern or broken, replace now",
+      "2": "Soon — significant wear, replace within a month",
+      "3": "Monitor — showing wear, keep an eye on it",
+      "4": "OK — good condition, no action needed",
+      "5": "New / Excellent — recently replaced or like new"
+    },
+    "conditionValues": ["excellent", "good", "fair", "poor", "unknown"],
+    "componentGroups": ["Drivetrain", "Brakes", "Wheels", "Handlebars/Cockpit", "Saddle/Seatpost", "Frame/Fork", "Accessories"]
+  },
+  "rules": [
+    "Claude Vision prompt must instruct the model to return only valid JSON matching the defined schema — no prose",
+    "Backend must validate Claude's response matches the schema before proceeding to scrape",
+    "If a part's condition is 'unknown', it should still be included in results but scraping is skipped for that part",
+    "Scraping is performed per part using the part's search_query field",
+    "Temp image files must be deleted after the analysis completes (success or failure)",
+    "Performance Bicycle scraper returns max 3 results per part to keep response time acceptable",
+    "If scraping for a part fails, return an empty results array for that part — do not fail the whole request"
+  ],
+  "qualityGates": [
+    "npm run lint",
+    "npm test"
+  ],
+  "stories": [
+    {
+      "id": "US-001",
+      "title": "[Setup] Project scaffold — monorepo structure, scripts, and env config",
+      "status": "open",
+      "dependsOn": [],
+      "worktree": "none (setup, must complete first)",
+      "description": "As a developer, I want the project folder structure, scripts, and environment configuration in place so all three work trees can begin in parallel.",
+      "acceptanceCriteria": [
+        "Root directory contains /client (React/Vite) and /server (Express) folders",
+        "Root package.json includes scripts: `dev` (starts both client and server), `lint`, `test`",
+        "server/package.json includes dependencies: express, multer, cors, dotenv, axios, cheerio — install with `npm install express multer cors dotenv axios cheerio`",
+        "client/package.json scaffolded via Vite: `npm create vite@latest client -- --template react`; install with `npm install`",
+        "server/.env.example contains ANTHROPIC_API_KEY=your_key_here and CLIENT_URL=http://localhost:5173",
+        "server/.env is gitignored",
+        "README.md documents: how to set env vars, how to run `npm run dev` from root",
+        "Example: cloning repo, copying .env.example to .env, running npm run dev — both client and server start without errors",
+        "Negative case: missing ANTHROPIC_API_KEY in .env causes server startup to log a clear warning (not a crash)"
+      ]
+    },
+    {
+      "id": "US-002",
+      "title": "[Tree 1 — Backend] Express server with health check and CORS",
+      "status": "open",
+      "dependsOn": ["US-001"],
+      "worktree": "tree-1-backend",
+      "description": "As a developer, I want a running Express server with CORS configured and a health check endpoint so the frontend can communicate with it.",
+      "acceptanceCriteria": [
+        "Express server starts on PORT from .env (default 3001)",
+        "CORS configured to allow requests from CLIENT_URL env var",
+        "GET /api/health returns { status: 'ok', timestamp: ISO-string }",
+        "Server uses dotenv to load environment variables on startup",
+        "npm test includes a test that GET /api/health returns 200 with status 'ok'",
+        "Example: curl http://localhost:3001/api/health → 200 { status: 'ok' }",
+        "Negative case: request from disallowed origin receives CORS error"
+      ]
+    },
+    {
+      "id": "US-003",
+      "title": "[Tree 1 — Backend] Photo upload endpoint with multer temp storage",
+      "status": "open",
+      "dependsOn": ["US-002"],
+      "worktree": "tree-1-backend",
+      "description": "As a user, I want to POST a bike photo to the backend so it can be processed by Claude Vision.",
+      "acceptanceCriteria": [
+        "POST /api/analyze accepts multipart/form-data with a field named `image`",
+        "multer stores the uploaded file in OS temp directory (os.tmpdir())",
+        "Accepted file types: image/jpeg, image/png, image/webp — reject others with 400",
+        "Max file size: 10MB — reject larger files with 413 and clear error message",
+        "File is deleted from temp storage after response is sent (success or error)",
+        "npm install multer already included in US-001",
+        "Example: POST with a valid JPEG → file saved to temp, path available in req.file",
+        "Negative case: POST with a .pdf file → 400 'Unsupported file type'",
+        "Negative case: POST with a 15MB image → 413 'File too large'"
+      ]
+    },
+    {
+      "id": "US-004",
+      "title": "[Tree 1 — Backend] Claude Vision API integration with structured JSON output",
+      "status": "open",
+      "dependsOn": ["US-003"],
+      "worktree": "tree-1-backend",
+      "description": "As the backend, I want to send the uploaded image to Claude Vision and receive a validated structured JSON analysis of the bike's parts, condition, and metadata.",
+      "acceptanceCriteria": [
+        "Install Anthropic SDK: `npm install @anthropic-ai/sdk` in /server",
+        "Image is read from temp file and base64-encoded before sending to Claude",
+        "Claude is called with model `claude-sonnet-4-5` (or latest vision-capable model)",
+        "System prompt instructs Claude to return ONLY valid JSON — no markdown, no prose, no code fences",
+        "Prompt specifies the full schema: bike object (brand, model, type, year, color, frame_material, notes) and parts array (id, name, component_group, brand, model, condition, condition_notes, priority 1-5, priority_label, search_query, visible_in_image)",
+        "Prompt includes the priority scale (1=Immediate, 2=Soon, 3=Monitor, 4=OK, 5=New) and condition values (excellent/good/fair/poor/unknown)",
+        "Prompt includes component group taxonomy: Drivetrain, Brakes, Wheels, Handlebars/Cockpit, Saddle/Seatpost, Frame/Fork, Accessories",
+        "Backend validates response is parseable JSON and contains required top-level keys: bike, parts, overall_condition, summary",
+        "Invalid or unparseable Claude response returns 502 with error message",
+        "Example: valid bike photo → Claude returns JSON with bike metadata and 5-10 parts",
+        "Negative case: Claude returns non-JSON text → backend returns 502 'Analysis failed: invalid response format'"
+      ]
+    },
+    {
+      "id": "US-005",
+      "title": "[Tree 2 — Scraping] Performance Bicycle part search scraper",
+      "status": "open",
+      "dependsOn": ["US-001"],
+      "worktree": "tree-2-scraping",
+      "description": "As the backend, I want to search Performance Bicycle by part name and scrape real pricing and availability so users see current market prices.",
+      "acceptanceCriteria": [
+        "cheerio is installed in /server (included in US-001 setup)",
+        "scrapePartPricing(searchQuery) function accepts a search query string and returns an array of up to 3 results",
+        "Each result contains: { title: string, price: string, availability: string, url: string }",
+        "HTTP request uses a realistic User-Agent header to avoid simple bot blocks",
+        "If no results are found, return an empty array (not an error)",
+        "If the HTTP request fails (network error, non-200 status), return an empty array and log the error",
+        "Function is exported from server/src/scrapers/performanceBicycle.js",
+        "npm test includes a test that scrapePartPricing returns an array (may be empty if site unreachable — test shape, not content)",
+        "Example: scrapePartPricing('Shimano Claris rear derailleur 8-speed') → [{title, price, availability, url}, ...]",
+        "Negative case: scrapePartPricing('xyzzy nonexistent part 9999') → []"
+      ]
+    },
+    {
+      "id": "US-006",
+      "title": "[Tree 2 — Scraping] Pricing API endpoint — batch pricing for all parts",
+      "status": "open",
+      "dependsOn": ["US-005"],
+      "worktree": "tree-2-scraping",
+      "description": "As the backend, I want a POST /api/pricing endpoint that accepts an array of parts and returns scraped pricing for each one.",
+      "acceptanceCriteria": [
+        "POST /api/pricing accepts JSON body: { parts: [{ id, name, search_query }] }",
+        "Scrapes Performance Bicycle for each part using its search_query field",
+        "Returns JSON: { pricing: [{ part_id, part_name, search_query, results: [{title, price, availability, url}] }] }",
+        "Parts are scraped sequentially (not concurrently) to avoid hammering the target site",
+        "Endpoint returns 200 even if all parts have empty pricing results",
+        "Returns 400 if parts array is missing or empty",
+        "npm test includes a test verifying POST /api/pricing with valid input returns 200 with correct shape",
+        "Example: POST with 3 parts → response contains 3 pricing entries (results may be empty arrays)",
+        "Negative case: POST with missing parts field → 400 'parts array is required'"
+      ]
+    },
+    {
+      "id": "US-007",
+      "title": "[Tree 3 — Frontend] React + Vite frontend scaffold with routing",
+      "status": "open",
+      "dependsOn": ["US-001"],
+      "worktree": "tree-3-frontend",
+      "description": "As a developer, I want a working React frontend with client-side routing so I can build Upload and Results pages.",
+      "acceptanceCriteria": [
+        "Install react-router-dom: `npm install react-router-dom` in /client",
+        "App.jsx defines routes: / → UploadPage, /results → ResultsPage",
+        "Both UploadPage and ResultsPage are stub components that render a heading (to be fleshed out in later stories)",
+        "Vite dev server runs on port 5173 without errors",
+        "Global CSS reset applied (box-sizing border-box, margin 0, base font)",
+        "npm run lint passes with no errors",
+        "Example: navigating to / renders 'Upload Page', navigating to /results renders 'Results Page'",
+        "Negative case: unknown route (e.g. /foo) renders a 404 'Page not found' message"
+      ]
+    },
+    {
+      "id": "US-008",
+      "title": "[Tree 3 — Frontend] Photo upload form component",
+      "status": "open",
+      "dependsOn": ["US-007"],
+      "worktree": "tree-3-frontend",
+      "description": "As a user, I want to select or drag-and-drop a bike photo on the upload page so I can trigger an analysis.",
+      "acceptanceCriteria": [
+        "UploadPage renders a centered card with a drag-and-drop zone and a file picker fallback",
+        "Accepted file types restricted to image/jpeg, image/png, image/webp in the input element",
+        "After selecting a file, a preview thumbnail of the image is shown",
+        "An 'Analyze Bike' button is enabled only when a file is selected",
+        "Submitting the form calls POST /api/analyze (via fetch or axios) with multipart/form-data",
+        "While the request is in flight, button shows 'Analyzing…' and is disabled",
+        "On success, navigate to /results passing the response data via React Router state",
+        "On error, display an inline error message: 'Analysis failed. Please try again.'",
+        "Install axios in /client: `npm install axios`",
+        "Example: drag a JPEG onto the zone → thumbnail appears → click Analyze → loading state shown",
+        "Negative case: attempt to upload a .gif → browser file picker rejects it due to accept attribute"
+      ]
+    },
+    {
+      "id": "US-009",
+      "title": "[Tree 3 — Frontend] Analysis results display component",
+      "status": "open",
+      "dependsOn": ["US-007"],
+      "worktree": "tree-3-frontend",
+      "description": "As a user, I want to see my bike's metadata and a detailed parts analysis table so I know what needs attention.",
+      "acceptanceCriteria": [
+        "ResultsPage reads analysis data from React Router location.state",
+        "Bike metadata section shows: brand, model, type, year, color, frame_material, overall_condition, summary",
+        "Parts section renders a table with columns: Part Name, Component Group, Brand/Model, Condition (badge), Priority (badge), Condition Notes",
+        "Condition badges: excellent=green, good=blue, fair=yellow, poor=red",
+        "Priority badges: 1=red 'Immediate', 2=orange 'Soon', 3=yellow 'Monitor', 4=blue 'OK', 5=green 'New'",
+        "Parts table is sortable by Priority (default sort: lowest number first = most urgent)",
+        "If location.state is null or missing, redirect to / with a message 'No analysis data — please upload a photo'",
+        "Example: results page loaded with 8 parts → table shows all 8 sorted by priority",
+        "Negative case: results page navigated to directly with no state → redirects to upload page"
+      ]
+    },
+    {
+      "id": "US-010",
+      "title": "[Tree 3 — Frontend] Pricing results display — integrated into results page",
+      "status": "open",
+      "dependsOn": ["US-009"],
+      "worktree": "tree-3-frontend",
+      "description": "As a user, I want to see Performance Bicycle pricing for each identified part so I know what replacements will cost.",
+      "acceptanceCriteria": [
+        "After analysis data loads, ResultsPage automatically calls POST /api/pricing with the parts array",
+        "While pricing is loading, each part row shows a 'Loading prices…' skeleton or spinner",
+        "Once pricing loads, each part row expands to show up to 3 Performance Bicycle results: product title, price, availability, and a link to the product page",
+        "If a part has no pricing results, show 'No results found on Performance Bicycle'",
+        "Pricing load errors are shown inline per part: 'Pricing unavailable'",
+        "Layout remains clean and scannable at 1280px width",
+        "Example: 6-part analysis → pricing call fires → each part row shows 1-3 product options with prices",
+        "Negative case: pricing API returns empty array for a part → 'No results found on Performance Bicycle' shown for that row"
+      ]
+    },
+    {
+      "id": "US-011",
+      "title": "[Integration] End-to-end flow — upload photo, get analysis, show pricing",
+      "status": "open",
+      "dependsOn": ["US-004", "US-006", "US-010"],
+      "worktree": "main",
+      "description": "As a user, I want the full workflow to work end-to-end: upload a photo, see Claude's analysis, and see real pricing from Performance Bicycle.",
+      "acceptanceCriteria": [
+        "Upload page successfully POSTs to POST /api/analyze and receives valid analysis JSON",
+        "POST /api/analyze calls Claude Vision and returns the structured bike/parts JSON",
+        "ResultsPage calls POST /api/pricing after receiving analysis data",
+        "Full flow completes without console errors in browser or server",
+        "Temp image file is cleaned up server-side after analysis",
+        "Tested manually: upload a real bike photo → full results render with bike metadata, parts table, and pricing",
+        "Example: upload Trek road bike photo → see 5-10 identified parts with conditions and Performance Bicycle prices",
+        "Negative case: upload a non-bike photo (e.g. a cat) → Claude still returns valid JSON (may have few/no parts), app renders gracefully without crashing"
+      ]
+    },
+    {
+      "id": "US-012",
+      "title": "[Integration] Desktop-first layout polish and basic styling",
+      "status": "open",
+      "dependsOn": ["US-011"],
+      "worktree": "main",
+      "description": "As a user, I want the app to look clean and professional on desktop so the results are easy to read and act on.",
+      "acceptanceCriteria": [
+        "App has a consistent color palette and typography (system font stack acceptable)",
+        "Upload page: centered card, max-width 600px, subtle shadow, clear call to action",
+        "Results page: two-column layout at ≥1024px (photo + bike info left, parts table right), single column below 768px",
+        "Parts table has alternating row colors for readability",
+        "Condition and priority badges are visually distinct and legible",
+        "Loading states (analysis + pricing) are clearly communicated with a spinner or skeleton",
+        "No horizontal scroll at 1280px",
+        "npm run lint passes with no errors after styling changes",
+        "Example: load results page at 1280px → clean two-column layout with no overflow",
+        "Negative case: view at 375px (mobile) → layout stacks to single column, no elements overflow viewport"
+      ]
+    }
+  ]
+}
