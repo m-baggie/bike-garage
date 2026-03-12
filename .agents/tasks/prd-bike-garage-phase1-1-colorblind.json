@@ -1,0 +1,125 @@
+{
+  "version": 1,
+  "project": "Bike Garage - Phase 1.1 Colorblind-Friendly UI",
+  "overview": "Replace the Phase 1 badge color system with a colorblind-safe palette and add iconography so condition and priority information is never conveyed by color alone. The current red/green/yellow/orange scheme is inaccessible to users with deuteranopia or protanopia (the most common forms of color blindness affecting ~8% of males).",
+  "goals": [
+    "Replace all badge colors with a WCAG 2.1 AA compliant, colorblind-safe palette",
+    "Add icons to condition and priority badges so status is not conveyed by color alone",
+    "Ensure all badge text meets 4.5:1 contrast ratio against its background",
+    "Apply consistent token-based color system so future phases inherit the accessible palette"
+  ],
+  "nonGoals": [
+    "No changes to backend, API, or data model",
+    "No new features or layout changes beyond badge/color corrections",
+    "No full WCAG audit of the entire app — scope is limited to condition and priority badges"
+  ],
+  "successMetrics": [
+    "All condition and priority badges pass 4.5:1 contrast ratio check (can verify with browser devtools or axe)",
+    "A user with simulated deuteranopia (Chrome devtools vision deficiency emulator) can distinguish all 5 priority levels and all 4 condition states",
+    "Badge icons are visible at 16px badge size"
+  ],
+  "openQuestions": [],
+  "stack": {
+    "framework": "React (Vite) frontend",
+    "hosting": "localhost",
+    "database": "none",
+    "auth": "none",
+    "notes": "CSS custom properties (variables) preferred for the color tokens so they are easy to override"
+  },
+  "routes": [
+    { "path": "/results", "name": "Results", "purpose": "Only page with condition and priority badges" }
+  ],
+  "uiNotes": [
+    "Use the IBM colorblind-safe palette as the base: Blue #648FFF, Purple #785EF0, Pink #DC267F, Orange #FE6100, Yellow #FFB000",
+    "Condition badge palette (colorblind-safe): excellent=Blue (#1D70B8, white text), good=Teal (#00A693, white text), fair=Amber (#B45309, white text), poor=Magenta (#9B1D6A, white text), unknown=Gray (#6B7280, white text)",
+    "Priority badge palette: 1=Immediate — dark red-orange (#B91C1C) + ⚠ icon, 2=Soon — orange (#C2410C) + ↑ icon, 3=Monitor — amber (#92400E) + ● icon, 4=OK — teal (#065F46) + ✓ icon, 5=New — blue (#1D4ED8) + ★ icon",
+    "All badge backgrounds must have white (#FFFFFF) or near-white text that passes 4.5:1 contrast",
+    "Badge format: [icon] [label text] — icon is a simple Unicode character or inline SVG, always accompanied by visible text",
+    "Do not rely solely on color — the icon + text label combination is the primary signal",
+    "Badges should retain their existing pill/rounded shape and padding from Phase 1",
+    "Define colors as CSS custom properties in index.css: --condition-excellent, --condition-good, --condition-fair, --condition-poor, --priority-1 through --priority-5",
+    "Update the legend/key if one exists on the results page"
+  ],
+  "dataModel": [],
+  "importFormat": {
+    "description": "Not applicable — frontend-only change"
+  },
+  "rules": [
+    "Never use red (#FF0000) and green (#00FF00) as the sole differentiators between two states",
+    "Every badge must have both a color AND a text label AND an icon — three independent signals",
+    "CSS custom properties must be used for all badge colors so they can be themed in Phase 3",
+    "Contrast ratio must be ≥4.5:1 for normal text (WCAG 2.1 AA) — verify with the WebAIM contrast checker formula or browser devtools"
+  ],
+  "qualityGates": [
+    "npm run lint",
+    "npm test"
+  ],
+  "stories": [
+    {
+      "id": "US-001",
+      "title": "Define colorblind-safe CSS color tokens for badges",
+      "status": "open",
+      "dependsOn": [],
+      "description": "As a developer, I want CSS custom properties for all badge colors defined in one place so the entire app uses a consistent, accessible palette.",
+      "acceptanceCriteria": [
+        "Add to client/src/index.css under :root — condition tokens: --condition-excellent: #1D70B8, --condition-good: #00796B, --condition-fair: #92400E, --condition-poor: #9B1D6A, --condition-unknown: #4B5563",
+        "Add priority tokens: --priority-1: #B91C1C, --priority-2: #C2410C, --priority-3: #92400E, --priority-4: #065F46, --priority-5: #1D4ED8",
+        "Add badge text token: --badge-text: #FFFFFF",
+        "No hardcoded hex colors remain in any badge component — all colors reference these variables",
+        "npm run lint passes",
+        "Example: inspecting a 'poor' condition badge in devtools shows background: var(--condition-poor)",
+        "Negative case: no badge uses a raw hex like #ff0000 or color name like 'red' directly in JSX styles or CSS"
+      ]
+    },
+    {
+      "id": "US-002",
+      "title": "Update condition badges with colorblind-safe colors and icons",
+      "status": "open",
+      "dependsOn": ["US-001"],
+      "description": "As a user with color vision deficiency, I want condition badges to use distinct colors AND icons so I can tell them apart without relying on color alone.",
+      "acceptanceCriteria": [
+        "Condition badge component updated with new palette using CSS tokens from US-001",
+        "Each condition value maps to: excellent → Blue (#1D70B8) + '★' icon, good → Teal (#00796B) + '✓' icon, fair → Amber (#92400E) + '●' icon, poor → Magenta (#9B1D6A) + '✕' icon, unknown → Gray (#4B5563) + '?' icon",
+        "Badge renders as: [icon] [label] — e.g. '✓ Good', '✕ Poor'",
+        "White (#FFFFFF) text used on all condition badge backgrounds — all combinations pass 4.5:1 contrast",
+        "Badge shape (pill/rounded) and padding unchanged from Phase 1",
+        "Simulating deuteranopia in Chrome devtools (Rendering → Emulate vision deficiency → Deuteranopia) shows all 5 conditions as visually distinct",
+        "npm run lint passes",
+        "Example: a part with condition 'poor' renders a magenta badge with '✕ Poor' in white text",
+        "Negative case: condition value 'unknown' renders the gray badge with '? Unknown' — not invisible or unstyled"
+      ]
+    },
+    {
+      "id": "US-003",
+      "title": "Update priority badges with colorblind-safe colors and icons",
+      "status": "open",
+      "dependsOn": ["US-001"],
+      "description": "As a user with color vision deficiency, I want priority badges to use distinct colors AND icons so I can immediately understand urgency without relying on color alone.",
+      "acceptanceCriteria": [
+        "Priority badge component updated with new palette using CSS tokens from US-001",
+        "Each priority level maps to: 1 → #B91C1C + '⚠ Immediate', 2 → #C2410C + '↑ Soon', 3 → #92400E + '● Monitor', 4 → #065F46 + '✓ OK', 5 → #1D4ED8 + '★ New'",
+        "White (#FFFFFF) text used on all priority badge backgrounds — all combinations pass 4.5:1 contrast",
+        "Badge renders as [icon] [label] — e.g. '⚠ Immediate', '✓ OK'",
+        "Badge shape (pill/rounded) and padding unchanged from Phase 1",
+        "Simulating deuteranopia in Chrome devtools shows all 5 priority levels as visually distinct",
+        "npm run lint passes",
+        "Example: priority 1 part renders a dark red badge with '⚠ Immediate' in white text",
+        "Negative case: priority 5 (New) badge is clearly distinguishable from priority 4 (OK) badge under deuteranopia simulation"
+      ]
+    },
+    {
+      "id": "US-004",
+      "title": "Update overall condition display on bike metadata section",
+      "status": "open",
+      "dependsOn": ["US-002"],
+      "description": "As a user, I want the overall bike condition displayed in the metadata section to also use the new colorblind-safe badge so it is consistent with the parts table.",
+      "acceptanceCriteria": [
+        "The overall_condition value shown in the bike metadata section uses the same updated condition badge component from US-002",
+        "Visually consistent with condition badges in the parts table",
+        "npm run lint passes",
+        "Example: bike with overall_condition 'good' shows a teal '✓ Good' badge in the metadata section",
+        "Negative case: overall_condition 'unknown' renders the gray '? Unknown' badge — not blank or missing"
+      ]
+    }
+  ]
+}
