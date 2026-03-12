@@ -1,6 +1,10 @@
 # Activity Log
 
 ## Run Summary
+- 2026-03-12 12:38:49 | run=20260312-121104-23111 | iter=4 | mode=build | story=US-004 | duration=543s | status=success
+- 2026-03-12 12:29:43 | run=20260312-121104-23111 | iter=3 | mode=build | story=US-003 | duration=415s | status=success
+- 2026-03-12 12:22:45 | run=20260312-121104-23111 | iter=2 | mode=build | story=US-002 | duration=333s | status=success
+- 2026-03-12 12:17:09 | run=20260312-121104-23111 | iter=1 | mode=build | story=US-001 | duration=364s | status=success
 - 2026-03-12 11:57:33 | run=20260312-114328-826 | iter=2 | mode=build | story=US-006 | duration=488s | status=success
 - 2026-03-12 11:49:22 | run=20260312-114328-826 | iter=1 | mode=build | story=US-004 | duration=354s | status=success
 - 2026-03-12 15:47:00 | run=20260312-114328-826 | iter=1 | mode=build | story=US-004 | status=success (re-run: implementation already complete, verified browser + quality gates)
@@ -132,3 +136,24 @@ Thu Mar 12 09:10:55 EDT 2026
 [2026-03-12 11:52] US-006: Starting responsive layout refinement — desktop and mobile web
 [2026-03-12 11:57] US-006: Browser verified, committed c2bc6a4, progress logged
 [2026-03-12 11:57:33] ITERATION 2 end (duration=488s)
+[2026-03-12 12:11:06] ITERATION 1 start (mode=build story=US-001)
+[2026-03-12 12:11:41] US-001: Starting work — update SYSTEM_PROMPT and schema validation for repair fields
+[2026-03-12 12:16:04] US-001: Updated SYSTEM_PROMPT with 4 repair fields, added schema defaults in route, created repair-fields.test.js (8 passing tests)
+[2026-03-12 12:16:53] US-001: Committed 95b99e3, progress log updated. Tests: 10 pass, 0 fail, 15 cancelled (same pre-existing baseline). Story complete.
+[2026-03-12 12:17:08] ITERATION 1 end (duration=364s)
+[2026-03-12 12:17:15] ITERATION 2 start (mode=build story=US-002)
+
+## 2026-03-12 12:35 | run=20260312-121104-23111 | iter=2 | story=US-002
+- Started work on US-002: Replace flat parts table with urgency-grouped sections
+- Added RepairActionBadge, UrgencySection components to ResultsPage.jsx
+- Replaced flat table with three collapsible urgency sections
+- lint: PASS | test: PASS (fail 0) | build: PASS
+- Committed: 36e3484 feat(ui): replace flat parts table with urgency-grouped sections (US-002)
+- Updated progress.md
+[2026-03-12 12:22:45] ITERATION 2 end (duration=333s)
+[2026-03-12 12:22:50] ITERATION 3 start (mode=build story=US-003)
+[2026-03-12 12:29:24] US-003: Implemented estimated cost range display in PricingCell — lint PASS, tests PASS (25/25), browser verified
+[2026-03-12 12:29:43] ITERATION 3 end (duration=415s)
+[2026-03-12 12:29:48] ITERATION 4 start (mode=build story=US-004)
+- 2026-03-12 12:35 | US-004 | MaintenanceSummaryCard implemented, browser verified, committed 483a1e1
+[2026-03-12 12:38:49] ITERATION 4 end (duration=543s)

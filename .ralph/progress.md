@@ -836,3 +836,117 @@ Run summary: /Users/mbaggie/Dev/bike-garage.feat-phase2-interactive-ui/.ralph/ru
   - dev-browser server was already running on port 9222 from prior run — no need to restart
   - Vite dev server picks next available port (5176) if 5173–5175 are occupied; check log output
 ---
+
+## [2026-03-12 12:20] - US-001: Update Claude prompt to return repair action, repair notes, and cost estimate per part
+Thread:
+Run: 20260312-121104-23111 (iteration 1)
+Run log: /Users/mbaggie/Dev/bike-garage.feat-phase2-1-repair-focus/.ralph/runs/run-20260312-121104-23111-iter-1.log
+Run summary: /Users/mbaggie/Dev/bike-garage.feat-phase2-1-repair-focus/.ralph/runs/run-20260312-121104-23111-iter-1.md
+- Guardrails reviewed: yes
+- No-commit run: false
+- Commit: 95b99e3 feat(api): add repair fields to Claude prompt and schema (US-001)
+- Post-commit status: `.agents/tasks/prd-bike-garage-phase2-1-repair-focus.json` modified (Ralph-managed, not committed per rules)
+- Verification:
+  - Command: `npm run lint` -> PASS (client ESLint clean after `npm install --prefix client` to restore missing node_modules)
+  - Command: `npm test` -> PASS (10 pass, 0 fail, 15 cancelled — same cancelled baseline as pre-existing; 8 new tests in repair-fields.test.js all pass)
+- Files changed:
+  - server/src/app.js (SYSTEM_PROMPT updated with 4 new part fields + repair action definitions and cost guidance; parts loop adds repair field defaults)
+  - server/src/index.test.js (integration contract test updated to validate repair fields on 200 responses)
+  - server/src/repair-fields.test.js (new — 8 synchronous unit tests for repair field defaults and pass-through)
+- What was implemented:
+  - SYSTEM_PROMPT: added repair_action (clean_lube|adjust|service|replace), repair_notes, estimated_cost_min, estimated_cost_max to each part spec with definitions and cost estimation guidance
+  - Schema defaults: in parts normalization loop, missing/invalid repair_action defaults to 'service', repair_notes to '', costs to 0 — prevents 502 on missing fields
+  - Tests: separate repair-fields.test.js file (no async server startup) to avoid pre-existing Node 18 event loop cancellation issue with index.test.js
+- **Learnings for future iterations:**
+  - Node 18 + node --test + top-level `await` in ESM + `import()` in `before()` hooks = async test suites get cancelled. Keep synchronous unit tests in a separate file without top-level awaits to guarantee they run.
+  - Client node_modules may need `npm install --prefix client` if freshly cloned/worktree; lint fails silently otherwise.
+  - The `.agents/tasks/*.json` PRD file is modified by Ralph but must NOT be committed (status managed by loop).
+---
+
+## [2026-03-12 12:35] - US-002: Replace flat parts table with urgency-grouped sections
+Thread:
+Run: 20260312-121104-23111 (iteration 2)
+Run log: /Users/mbaggie/Dev/bike-garage.feat-phase2-1-repair-focus/.ralph/runs/run-20260312-121104-23111-iter-2.log
+Run summary: /Users/mbaggie/Dev/bike-garage.feat-phase2-1-repair-focus/.ralph/runs/run-20260312-121104-23111-iter-2.md
+- Guardrails reviewed: yes
+- No-commit run: false
+- Commit: 36e3484 feat(ui): replace flat parts table with urgency-grouped sections (US-002)
+- Post-commit status: clean (ResultsPage.jsx committed; PRD/activity/errors remain Ralph-managed)
+- Verification:
+  - Command: `npm run lint` -> PASS
+  - Command: `npm test` -> PASS (fail 0; cancelled tests are pre-existing async infra issue)
+  - Command: `npm run build --prefix client` -> PASS (94 modules, 0 errors)
+  - Browser: SKIP (Vite dev server requires Node 20+; environment has Node 18)
+- Files changed:
+  - client/src/pages/ResultsPage.jsx
+- What was implemented:
+  - RepairActionBadge component: clean_lube (blue), adjust (purple), service (orange), replace (red)
+  - URGENCY_SECTIONS constant: Action Required (p1-2, red #EF4444), Monitor (p3, amber #F59E0B), Good Shape (p4-5, green #10B981)
+  - UrgencySection component: collapsible header with chevron, colored border/background, open by default, hides when 0 parts
+  - Desktop table within each section: Part Name, Component Group, Brand/Model, Condition, Priority, Condition Notes+Repair Notes, Repair Action, Pricing
+  - Repair notes rendered below condition notes in italic smaller font (0.8rem)
+  - Mobile list within each section: part name + RepairActionBadge + PriorityBadge per row
+  - Removed sortAsc/toggleSort (within sections always ascending); removed standalone MobilePartsList
+- **Learnings for future iterations:**
+  - Node 18 in this environment blocks Vite dev server (crypto.hash missing) and undici (File not defined); build still works
+  - UrgencySection renders both desktop table and mobile list (CSS class toggles between them via media query)
+  - rowRefs are now populated inside UrgencySection — scroll-into-view from image overlay still works
+---
+
+## [2026-03-12 12:30] - US-003: Show estimated cost range per part in pricing column
+Thread:
+Run: 20260312-121104-23111 (iteration 3)
+Run log: /Users/mbaggie/Dev/bike-garage.feat-phase2-1-repair-focus/.ralph/runs/run-20260312-121104-23111-iter-3.log
+Run summary: /Users/mbaggie/Dev/bike-garage.feat-phase2-1-repair-focus/.ralph/runs/run-20260312-121104-23111-iter-3.md
+- Guardrails reviewed: yes
+- No-commit run: false
+- Commit: f98ca9b feat(ui): show Claude estimated cost range in pricing column (US-003)
+- Post-commit status: clean
+- Verification:
+  - Command: `npm run lint` -> PASS
+  - Command: `npm test` -> PASS (25 tests, 0 failures)
+  - Browser: PASS — DOM evaluation confirmed 'Cost unknown' for part with min=0/max=0, 'Est. $15 – $80' for part with min=15/max=80
+- Files changed:
+  - client/src/pages/ResultsPage.jsx
+- What was implemented:
+  - Added `formatClaudeEstimate(part)` helper: returns 'Cost unknown' when both min/max are 0, else 'Est. $N – $N'
+  - Updated `PricingCell` to accept a `part` prop alongside `state`
+  - No scraping results → show `formatClaudeEstimate(part)` in neutral gray (`#9ca3af`)
+  - Has scraping results → show scraped cards first, then append 'Claude estimate: $X – $Y' in smaller muted text below
+  - Added `ps.estimate` and `ps.claudeEstimate` styles
+  - Updated both PricingCell call sites to pass `part` prop (table row and PartDetailPanel)
+- **Learnings for future iterations:**
+  - Node 20 required for Vite dev server; Node 18 (default in env) must use `nvm use 20.x` before `npm run dev`
+  - Playwright page route mocking works well for testing UI without a real Anthropic API key
+  - Part fields (estimated_cost_min, estimated_cost_max) flow from Claude response through server schema defaults to the React parts array
+---
+
+---
+
+## [2026-03-12 12:35] - US-004: Maintenance summary card at top of results page
+Thread:
+Run: 20260312-121104-23111 (iteration 4)
+Run log: /Users/mbaggie/Dev/bike-garage.feat-phase2-1-repair-focus/.ralph/runs/run-20260312-121104-23111-iter-4.log
+Run summary: /Users/mbaggie/Dev/bike-garage.feat-phase2-1-repair-focus/.ralph/runs/run-20260312-121104-23111-iter-4.md
+- Guardrails reviewed: yes
+- No-commit run: false
+- Commit: 483a1e1 feat(ui): add MaintenanceSummaryCard above urgency sections (US-004)
+- Post-commit status: `.agents/tasks/prd-bike-garage-phase2-1-repair-focus.json` modified (Ralph-managed); `server/.env.save` untracked (pre-existing, not mine)
+- Verification:
+  - Command: `npm run lint` -> PASS
+  - Command: `npm test` -> PASS (25/25 server tests)
+  - Browser: desktop + mobile screenshots verified ✓
+- Files changed:
+  - client/src/pages/ResultsPage.jsx
+- What was implemented:
+  - Added `MaintenanceSummaryCard` component that shows 4 stats: urgent (hidden if 0), monitor, good-shape, and total cost range
+  - Cost shows 'Cost unknown' when all parts have zero estimated costs
+  - White card background with subtle border, rounded corners, 16px padding
+  - Desktop: single row via flex-wrap; mobile (<768px): 2×2 CSS grid
+  - Placed at top of right column, above PartDetailPanel and urgency sections
+  - Injected responsive CSS via separate `__summary_card_layout` style tag
+- **Learnings for future iterations:**
+  - Cost stat color must be dark (#374151) not white — the card has a white background
+  - React Router v6 internal state format is `{ usr: actualState, key: 'xxx' }` for `pushState`/`popstate` browser test injection
+  - `useState` initializer runs only on mount; re-injecting router state won't update it — use a fresh page for edge-case browser tests
+---

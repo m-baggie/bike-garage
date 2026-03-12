@@ -34,6 +34,18 @@ Each part object in "parts" must have:
 - "search_query": string (suggested search query to find replacement part)
 - "visible_in_image": boolean
 - "boundingBox": object or null — normalized bounding box of the part within the image. If the part is visible and you can identify a region, provide { "x": number, "y": number, "width": number, "height": number } where all values are 0.0–1.0 relative to image dimensions. x and y are the top-left corner of the bounding region; width and height are the region dimensions. If the part is not visible or the region cannot be determined, set boundingBox to null.
+- "repair_action": string (one of: clean_lube, adjust, service, replace) — the recommended repair action for this part
+- "repair_notes": string — 1-2 sentence specific instruction for the mechanic (e.g. "Apply leather conditioner and let soak overnight before buffing")
+- "estimated_cost_min": integer — minimum estimated repair/replacement cost in USD (labour + parts)
+- "estimated_cost_max": integer — maximum estimated repair/replacement cost in USD (labour + parts)
+
+Repair action definitions:
+- clean_lube: Part just needs cleaning and/or lubrication; no adjustment or parts needed. Typical cost: $0-$20.
+- adjust: Part is functional but needs a mechanical adjustment (e.g. cable tension, alignment, limit screws). Typical cost: $10-$40.
+- service: Part needs a full service or overhaul (e.g. bearing repack, brake bleed, deep clean). Typical cost: $20-$100.
+- replace: Part is worn, damaged, or unsafe and must be replaced. Cost depends on part price + labour.
+
+Cost estimation guidance: estimate the realistic total cost (parts + labour) a customer would pay at a typical bike shop in USD. Use 0 for estimated_cost_min only when the action is clean_lube with no shop visit required.
 
 Identify 5-10 visible parts. Use component groups: Drivetrain, Brakes, Wheels, Handlebars/Cockpit, Saddle/Seatpost, Frame/Fork, Accessories.
 Priority scale: 1=Immediate, 2=Soon, 3=Monitor, 4=OK, 5=New.
@@ -180,6 +192,21 @@ app.post('/api/analyze', (req, res, next) => {
         // Ensure parts not visible in image always have null boundingBox
         if (part.visible_in_image === false) {
           part.boundingBox = null;
+        }
+
+        // Apply defaults for repair fields if Claude omits them
+        const VALID_REPAIR_ACTIONS = new Set(['clean_lube', 'adjust', 'service', 'replace']);
+        if (!VALID_REPAIR_ACTIONS.has(part.repair_action)) {
+          part.repair_action = 'service';
+        }
+        if (typeof part.repair_notes !== 'string') {
+          part.repair_notes = '';
+        }
+        if (!Number.isInteger(part.estimated_cost_min) || part.estimated_cost_min < 0) {
+          part.estimated_cost_min = 0;
+        }
+        if (!Number.isInteger(part.estimated_cost_max) || part.estimated_cost_max < 0) {
+          part.estimated_cost_max = 0;
         }
       }
     }

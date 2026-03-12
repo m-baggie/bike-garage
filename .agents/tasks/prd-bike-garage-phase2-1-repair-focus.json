@@ -12,7 +12,7 @@
     "No changes to the scraping logic or Performance Bicycle integration",
     "No DIY difficulty feature (deferred)",
     "No changes to the interactive image overlay or bounding box features",
-    "No backend route changes — all new fields come through the existing POST /api/analyze response",
+    "No backend route changes \u2014 all new fields come through the existing POST /api/analyze response",
     "No database or persistence changes"
   ],
   "successMetrics": [
@@ -33,28 +33,41 @@
     "notes": "New fields added to Claude Vision prompt and schema; frontend updated to consume them"
   },
   "routes": [
-    { "path": "/results", "name": "Results", "purpose": "Primary page being updated" }
+    {
+      "path": "/results",
+      "name": "Results",
+      "purpose": "Primary page being updated"
+    }
   ],
   "uiNotes": [
     "Summary card: sits above the parts sections, shows 4 stats in a row: urgent count (red), monitor count (yellow), good count (green), estimated total cost range (neutral). Card background is white with a subtle border.",
     "Urgency sections replace the single flat table: 'Action Required' (priority 1-2, red section header), 'Monitor' (priority 3, yellow header), 'Good Shape' (priority 4-5, green header)",
-    "Each section is collapsible — open by default, user can collapse 'Good Shape' to focus on problems",
+    "Each section is collapsible \u2014 open by default, user can collapse 'Good Shape' to focus on problems",
     "Part row updated: add 'Repair Action' badge (Clean & Lube=blue, Adjust=purple, Service=orange, Replace=red) and estimated cost range in the pricing column when no scraping results exist",
     "If scraping DID return results, show those results AND the Claude estimated range below them labeled 'Estimated (if unavailable)'",
-    "Empty sections (e.g. no Action Required parts) are hidden entirely — do not show empty section headers",
-    "Repair action badge uses a wrench icon: 🔧 or inline SVG"
+    "Empty sections (e.g. no Action Required parts) are hidden entirely \u2014 do not show empty section headers",
+    "Repair action badge uses a wrench icon: \ud83d\udd27 or inline SVG"
   ],
   "dataModel": [
     {
       "entity": "Part (extended)",
       "fields": [
-        "id", "name", "component_group", "brand", "model",
-        "condition", "condition_notes", "priority", "priority_label",
-        "search_query", "visible_in_image", "boundingBox",
+        "id",
+        "name",
+        "component_group",
+        "brand",
+        "model",
+        "condition",
+        "condition_notes",
+        "priority",
+        "priority_label",
+        "search_query",
+        "visible_in_image",
+        "boundingBox",
         "repair_action (new): one of: clean_lube | adjust | service | replace",
-        "repair_notes (new): string — specific repair instructions for this part",
-        "estimated_cost_min (new): integer — low end USD estimate",
-        "estimated_cost_max (new): integer — high end USD estimate"
+        "repair_notes (new): string \u2014 specific repair instructions for this part",
+        "estimated_cost_min (new): integer \u2014 low end USD estimate",
+        "estimated_cost_max (new): integer \u2014 high end USD estimate"
       ]
     }
   ],
@@ -63,13 +76,13 @@
     "newFields": {
       "repair_action": "one of: clean_lube | adjust | service | replace",
       "repair_notes": "1-2 sentence specific repair instruction, e.g. 'Apply leather conditioner and let dry for 24 hours. If cracking is deep, consider a new Brooks B17.'",
-      "estimated_cost_min": "integer USD — low end cost to address this part (parts + labor if service/replace, product cost if clean_lube/adjust)",
-      "estimated_cost_max": "integer USD — high end cost"
+      "estimated_cost_min": "integer USD \u2014 low end cost to address this part (parts + labor if service/replace, product cost if clean_lube/adjust)",
+      "estimated_cost_max": "integer USD \u2014 high end cost"
     },
     "repairActionDefinitions": {
-      "clean_lube": "Part needs cleaning and/or lubrication only — no parts required",
-      "adjust": "Part needs adjustment or tuning — no replacement parts required",
-      "service": "Part needs a service/overhaul — may involve replacing consumables (cables, housing, bearings)",
+      "clean_lube": "Part needs cleaning and/or lubrication only \u2014 no parts required",
+      "adjust": "Part needs adjustment or tuning \u2014 no replacement parts required",
+      "service": "Part needs a service/overhaul \u2014 may involve replacing consumables (cables, housing, bearings)",
       "replace": "Part should be replaced entirely"
     },
     "costGuidance": "Estimate realistic US market cost including labor for service/replace. For clean_lube or adjust, estimate product/tool cost only (typically $5-30). For unknown/vintage parts with no brand, use generic replacement cost.",
@@ -93,13 +106,13 @@
   },
   "rules": [
     "Claude prompt must be updated to include the four new fields: repair_action, repair_notes, estimated_cost_min, estimated_cost_max",
-    "repair_action must be one of exactly: clean_lube, adjust, service, replace — backend validates this",
-    "estimated_cost_min and estimated_cost_max must be integers ≥ 0",
-    "Backend schema validation updated to accept (but not require) the new fields — if missing, defaults: repair_action='service', repair_notes='', estimated_cost_min=0, estimated_cost_max=0",
+    "repair_action must be one of exactly: clean_lube, adjust, service, replace \u2014 backend validates this",
+    "estimated_cost_min and estimated_cost_max must be integers \u2265 0",
+    "Backend schema validation updated to accept (but not require) the new fields \u2014 if missing, defaults: repair_action='service', repair_notes='', estimated_cost_min=0, estimated_cost_max=0",
     "Summary card total cost range = sum of all parts' estimated_cost_min to estimated_cost_max",
     "Urgency grouping: Action Required = priority 1 or 2, Monitor = priority 3, Good Shape = priority 4 or 5",
     "If a section has zero parts, do not render the section header or container",
-    "Performance Bicycle scraping results still display when available — Claude cost estimate shown as secondary info"
+    "Performance Bicycle scraping results still display when available \u2014 Claude cost estimate shown as secondary info"
   ],
   "qualityGates": [
     "npm run lint",
@@ -109,7 +122,7 @@
     {
       "id": "US-001",
       "title": "Update Claude prompt to return repair action, repair notes, and cost estimate per part",
-      "status": "open",
+      "status": "done",
       "dependsOn": [],
       "description": "As the backend, I want Claude Vision to return repair_action, repair_notes, estimated_cost_min, and estimated_cost_max for each part so the frontend can display actionable repair guidance.",
       "acceptanceCriteria": [
@@ -118,61 +131,79 @@
         "Backend schema validation updated: new fields accepted, defaults applied if missing (repair_action='service', repair_notes='', estimated_cost_min=0, estimated_cost_max=0)",
         "POST /api/analyze response now includes the four new fields on each part object",
         "npm test includes a test verifying the new fields are present in the response shape (or defaults applied)",
-        "Example: Leather Saddle with fair condition → repair_action: 'service', repair_notes: 'Apply leather conditioner...', estimated_cost_min: 15, estimated_cost_max: 80",
-        "Negative case: Claude omits repair_action for a part → backend applies default 'service', does not return 502"
-      ]
+        "Example: Leather Saddle with fair condition \u2192 repair_action: 'service', repair_notes: 'Apply leather conditioner...', estimated_cost_min: 15, estimated_cost_max: 80",
+        "Negative case: Claude omits repair_action for a part \u2192 backend applies default 'service', does not return 502"
+      ],
+      "startedAt": "2026-03-12T16:11:05.231821+00:00",
+      "completedAt": "2026-03-12T16:17:09.643668+00:00",
+      "updatedAt": "2026-03-12T16:17:09.643190+00:00"
     },
     {
       "id": "US-002",
       "title": "Replace flat parts table with urgency-grouped sections",
-      "status": "open",
-      "dependsOn": ["US-001"],
+      "status": "done",
+      "dependsOn": [
+        "US-001"
+      ],
       "description": "As a user, I want parts grouped by urgency so the most critical repairs are immediately visible at the top.",
       "acceptanceCriteria": [
         "ResultsPage replaces the single flat parts table with three named sections: 'Action Required' (priority 1-2), 'Monitor' (priority 3), 'Good Shape' (priority 4-5)",
         "Each section has a colored header: Action Required=red, Monitor=amber, Good Shape=green",
-        "Each section is collapsible — chevron toggle, all sections open by default",
+        "Each section is collapsible \u2014 chevron toggle, all sections open by default",
         "Sections with zero parts are not rendered",
         "Within each section, parts are sorted by priority ascending (1 before 2, etc.)",
-        "Each part row now includes a 'Repair Action' badge: clean_lube='🔧 Clean & Lube' (blue), adjust='🔧 Adjust' (purple), service='🔧 Service' (orange), replace='🔧 Replace' (red)",
+        "Each part row now includes a 'Repair Action' badge: clean_lube='\ud83d\udd27 Clean & Lube' (blue), adjust='\ud83d\udd27 Adjust' (purple), service='\ud83d\udd27 Service' (orange), replace='\ud83d\udd27 Replace' (red)",
         "Repair notes displayed below condition notes in an italicized smaller font",
         "npm run lint passes",
-        "Example: 10-part analysis with 2 priority-1, 5 priority-3, 3 priority-4 → three sections rendered with correct part counts",
-        "Negative case: all parts are priority 4-5 → only 'Good Shape' section renders, 'Action Required' and 'Monitor' sections are hidden"
-      ]
+        "Example: 10-part analysis with 2 priority-1, 5 priority-3, 3 priority-4 \u2192 three sections rendered with correct part counts",
+        "Negative case: all parts are priority 4-5 \u2192 only 'Good Shape' section renders, 'Action Required' and 'Monitor' sections are hidden"
+      ],
+      "startedAt": "2026-03-12T16:17:13.118010+00:00",
+      "completedAt": "2026-03-12T16:22:46.407137+00:00",
+      "updatedAt": "2026-03-12T16:22:46.406416+00:00"
     },
     {
       "id": "US-003",
       "title": "Show estimated cost range per part in pricing column",
-      "status": "open",
-      "dependsOn": ["US-001"],
+      "status": "done",
+      "dependsOn": [
+        "US-001"
+      ],
       "description": "As a user, I want to see an estimated cost range for each part so I know what to budget even when Performance Bicycle has no results.",
       "acceptanceCriteria": [
-        "When a part has no Performance Bicycle scraping results, the pricing cell shows the Claude estimated range: 'Est. $15 – $80' in a neutral gray style",
-        "When scraping results ARE available, show the scraped results first, then below them show 'Claude estimate: $15 – $80' in a smaller muted style",
-        "If estimated_cost_min and estimated_cost_max are both 0, show 'Cost unknown' instead of 'Est. $0 – $0'",
-        "Cost range formatted as: 'Est. $[min] – $[max]' with dollar sign and no decimals",
+        "When a part has no Performance Bicycle scraping results, the pricing cell shows the Claude estimated range: 'Est. $15 \u2013 $80' in a neutral gray style",
+        "When scraping results ARE available, show the scraped results first, then below them show 'Claude estimate: $15 \u2013 $80' in a smaller muted style",
+        "If estimated_cost_min and estimated_cost_max are both 0, show 'Cost unknown' instead of 'Est. $0 \u2013 $0'",
+        "Cost range formatted as: 'Est. $[min] \u2013 $[max]' with dollar sign and no decimals",
         "npm run lint passes",
-        "Example: Leather Saddle with no scraping results → pricing cell shows 'Est. $15 – $80'",
-        "Negative case: part with cost_min=0 and cost_max=0 → shows 'Cost unknown', not 'Est. $0 – $0'"
-      ]
+        "Example: Leather Saddle with no scraping results \u2192 pricing cell shows 'Est. $15 \u2013 $80'",
+        "Negative case: part with cost_min=0 and cost_max=0 \u2192 shows 'Cost unknown', not 'Est. $0 \u2013 $0'"
+      ],
+      "startedAt": "2026-03-12T16:22:49.123978+00:00",
+      "completedAt": "2026-03-12T16:29:44.023250+00:00",
+      "updatedAt": "2026-03-12T16:29:44.022543+00:00"
     },
     {
       "id": "US-004",
       "title": "Maintenance summary card at top of results page",
-      "status": "open",
-      "dependsOn": ["US-001"],
+      "status": "done",
+      "dependsOn": [
+        "US-001"
+      ],
       "description": "As a user, I want a summary card at the top of the results page that shows urgent part counts and total estimated cost so I get an at-a-glance view of my bike's health.",
       "acceptanceCriteria": [
         "Summary card renders above the urgency sections, below the bike metadata",
-        "Card shows four stats in a row: '⚠ X parts need attention' (red, count of priority 1-2), '● X to monitor' (amber, count of priority 3), '✓ X in good shape' (green, count of priority 4-5), '💰 Est. $min – $max total' (neutral, sum of all parts' cost ranges)",
+        "Card shows four stats in a row: '\u26a0 X parts need attention' (red, count of priority 1-2), '\u25cf X to monitor' (amber, count of priority 3), '\u2713 X in good shape' (green, count of priority 4-5), '\ud83d\udcb0 Est. $min \u2013 $max total' (neutral, sum of all parts' cost ranges)",
         "If all parts have cost 0, the cost stat shows 'Cost unknown'",
         "Card has a white background, subtle border, rounded corners, and 16px padding",
         "On mobile (<768px) stats wrap to 2x2 grid instead of a single row",
         "npm run lint passes",
-        "Example: 10 parts — 2 urgent, 5 monitor, 3 good, total estimated $120–$340 → card shows all four stats correctly",
-        "Negative case: 0 urgent parts → '⚠ 0 parts need attention' is hidden; card only shows monitor + good shape + cost stats"
-      ]
+        "Example: 10 parts \u2014 2 urgent, 5 monitor, 3 good, total estimated $120\u2013$340 \u2192 card shows all four stats correctly",
+        "Negative case: 0 urgent parts \u2192 '\u26a0 0 parts need attention' is hidden; card only shows monitor + good shape + cost stats"
+      ],
+      "startedAt": "2026-03-12T16:29:46.724980+00:00",
+      "completedAt": "2026-03-12T16:38:50.087142+00:00",
+      "updatedAt": "2026-03-12T16:38:50.086496+00:00"
     }
   ]
 }

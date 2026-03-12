@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "total": 4,
+  "remaining": 3,
+  "quality_gates": [
+    "npm run lint",
+    "npm test"
+  ],
+  "id": "US-002",
+  "title": "Replace flat parts table with urgency-grouped sections"
+}

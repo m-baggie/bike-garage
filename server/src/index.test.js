@@ -320,8 +320,17 @@ describe('POST /api/analyze — Claude Vision integration contract', () => {
       assert.ok('overall_condition' in body, 'response must have overall_condition key');
       assert.ok('summary' in body, 'response must have summary key');
       assert.ok(Array.isArray(body.parts), 'parts must be an array');
-      // Validate boundingBox shape on each part
+      // Validate repair fields and boundingBox shape on each part
+      const VALID_REPAIR_ACTIONS = new Set(['clean_lube', 'adjust', 'service', 'replace']);
       for (const part of body.parts) {
+        assert.ok('repair_action' in part, 'each part must have a repair_action field');
+        assert.ok(VALID_REPAIR_ACTIONS.has(part.repair_action), `repair_action must be one of the valid values, got: ${part.repair_action}`);
+        assert.ok('repair_notes' in part, 'each part must have a repair_notes field');
+        assert.ok(typeof part.repair_notes === 'string', 'repair_notes must be a string');
+        assert.ok('estimated_cost_min' in part, 'each part must have an estimated_cost_min field');
+        assert.ok(Number.isInteger(part.estimated_cost_min) && part.estimated_cost_min >= 0, 'estimated_cost_min must be a non-negative integer');
+        assert.ok('estimated_cost_max' in part, 'each part must have an estimated_cost_max field');
+        assert.ok(Number.isInteger(part.estimated_cost_max) && part.estimated_cost_max >= 0, 'estimated_cost_max must be a non-negative integer');
         assert.ok('boundingBox' in part, 'each part must have a boundingBox field');
         if (part.boundingBox !== null) {
           const bb = part.boundingBox;

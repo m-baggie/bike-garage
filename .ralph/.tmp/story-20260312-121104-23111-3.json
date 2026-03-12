@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "total": 4,
+  "remaining": 2,
+  "quality_gates": [
+    "npm run lint",
+    "npm test"
+  ],
+  "id": "US-003",
+  "title": "Show estimated cost range per part in pricing column"
+}

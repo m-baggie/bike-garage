@@ -57,6 +57,39 @@ function PriorityBadge({ value }) {
   )
 }
 
+// ── Repair action badge ───────────────────────────────────────────────────────
+const REPAIR_ACTION_CONFIG = {
+  clean_lube: { label: '🔧 Clean & Lube', bg: '#1D4ED8' },
+  adjust:     { label: '🔧 Adjust',       bg: '#7C3AED' },
+  service:    { label: '🔧 Service',      bg: '#C2410C' },
+  replace:    { label: '🔧 Replace',      bg: '#B91C1C' },
+}
+
+function RepairActionBadge({ value }) {
+  const cfg = REPAIR_ACTION_CONFIG[value]
+  if (!cfg) return null
+  return (
+    <span style={{
+      display: 'inline-block',
+      padding: '2px 10px',
+      borderRadius: '9999px',
+      fontSize: '0.78rem',
+      fontWeight: 600,
+      background: cfg.bg,
+      color: 'var(--badge-text)',
+    }}>
+      {cfg.label}
+    </span>
+  )
+}
+
+// ── Urgency section definitions ───────────────────────────────────────────────
+const URGENCY_SECTIONS = [
+  { key: 'action',  label: 'Action Required', color: '#EF4444', test: (p) => p.priority <= 2 },
+  { key: 'monitor', label: 'Monitor',          color: '#F59E0B', test: (p) => p.priority === 3 },
+  { key: 'good',    label: 'Good Shape',       color: '#10B981', test: (p) => p.priority >= 4 },
+]
+
 // ── Metadata row ─────────────────────────────────────────────────────────────
 function MetaRow({ label, value }) {
   if (!value && value !== 0) return null
@@ -68,8 +101,16 @@ function MetaRow({ label, value }) {
   )
 }
 
+// ── Pricing cell helpers ──────────────────────────────────────────────────────
+function formatClaudeEstimate(part) {
+  const min = part?.estimated_cost_min ?? 0
+  const max = part?.estimated_cost_max ?? 0
+  if (min === 0 && max === 0) return 'Cost unknown'
+  return `Est. $${min} – $${max}`
+}
+
 // ── Pricing cell ─────────────────────────────────────────────────────────────
-function PricingCell({ state }) {
+function PricingCell({ state, part }) {
   if (!state) {
     return <span style={ps.muted}>Loading prices…</span>
   }
@@ -85,7 +126,7 @@ function PricingCell({ state }) {
     return <span style={ps.error}>Pricing unavailable</span>
   }
   if (!state.results || state.results.length === 0) {
-    return <span style={ps.muted}>No results found on Performance Bicycle</span>
+    return <span style={ps.estimate}>{formatClaudeEstimate(part)}</span>
   }
   return (
     <div style={ps.resultList}>
@@ -107,6 +148,7 @@ function PricingCell({ state }) {
           </div>
         </div>
       ))}
+      <div style={ps.claudeEstimate}>Claude estimate: {formatClaudeEstimate(part)}</div>
     </div>
   )
 }
@@ -149,6 +191,8 @@ const ps = {
   productMeta: { display: 'flex', gap: '0.75rem', alignItems: 'center' },
   price: { fontWeight: 700, fontSize: '0.88rem', color: '#86efac' },
   availability: { fontSize: '0.75rem', opacity: 0.65 },
+  estimate: { fontSize: '0.82rem', color: '#9ca3af' },
+  claudeEstimate: { fontSize: '0.75rem', color: '#9ca3af', marginTop: '0.25rem' },
 }
 
 // ── Part Detail Panel ─────────────────────────────────────────────────────────
@@ -204,7 +248,7 @@ function PartDetailPanel({ part, pricingState, onClose }) {
               )}
               <div style={{ marginTop: '0.5rem' }}>
                 <span style={{ ...dp.label, display: 'block', marginBottom: '0.4rem' }}>Pricing</span>
-                <PricingCell state={pricingState} />
+                <PricingCell state={pricingState} part={part} />
               </div>
             </div>
           </>
@@ -367,6 +411,104 @@ const s = {
   },
 }
 
+// ── Maintenance Summary Card ──────────────────────────────────────────────────
+function MaintenanceSummaryCard({ parts }) {
+  const urgentCount  = parts.filter((p) => p.priority <= 2).length
+  const monitorCount = parts.filter((p) => p.priority === 3).length
+  const goodCount    = parts.filter((p) => p.priority >= 4).length
+
+  const totalMin = parts.reduce((acc, p) => acc + (p.estimated_cost_min ?? 0), 0)
+  const totalMax = parts.reduce((acc, p) => acc + (p.estimated_cost_max ?? 0), 0)
+  const costText = totalMin === 0 && totalMax === 0
+    ? 'Cost unknown'
+    : `Est. $${totalMin} \u2013 $${totalMax} total`
+
+  const stats = [
+    urgentCount > 0 && {
+      icon: '⚠',
+      label: `${urgentCount} parts need attention`,
+      color: '#EF4444',
+    },
+    {
+      icon: '●',
+      label: `${monitorCount} to monitor`,
+      color: '#F59E0B',
+    },
+    {
+      icon: '✓',
+      label: `${goodCount} in good shape`,
+      color: '#10B981',
+    },
+    {
+      icon: '💰',
+      label: costText,
+      color: '#374151',
+    },
+  ].filter(Boolean)
+
+  return (
+    <div style={sc.card}>
+      <div className="sc-stats">
+        {stats.map((stat, i) => (
+          <div key={i} style={sc.stat}>
+            <span style={{ ...sc.icon, color: stat.color }}>{stat.icon}</span>
+            <span style={{ ...sc.label, color: stat.color }}>{stat.label}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+const sc = {
+  card: {
+    background: '#ffffff',
+    border: '1px solid rgba(0,0,0,0.12)',
+    borderRadius: '10px',
+    padding: '16px',
+    marginBottom: '1rem',
+    boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
+    color: '#1a1a1a',
+  },
+  stat: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '0.4rem',
+  },
+  icon: {
+    fontSize: '1rem',
+    lineHeight: 1,
+    flexShrink: 0,
+  },
+  label: {
+    fontSize: '0.88rem',
+    fontWeight: 600,
+    lineHeight: 1.3,
+  },
+}
+
+// Inject summary card responsive CSS (once)
+if (typeof document !== 'undefined' && !document.getElementById('__summary_card_layout')) {
+  const style = document.createElement('style')
+  style.id = '__summary_card_layout'
+  style.textContent = `
+    .sc-stats {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem 1.5rem;
+      align-items: center;
+    }
+    @media (max-width: 767px) {
+      .sc-stats {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 0.65rem;
+      }
+    }
+  `
+  document.head.appendChild(style)
+}
+
 // Inject responsive layout CSS (once)
 if (typeof document !== 'undefined' && !document.getElementById('__results_layout')) {
   const style = document.createElement('style')
@@ -464,35 +606,155 @@ if (typeof document !== 'undefined' && !document.getElementById('__results_layou
   document.head.appendChild(style)
 }
 
-// ── Mobile condensed parts list ───────────────────────────────────────────────
-// Single-line rows (name + priority badge); tap a row to open the bottom sheet.
-function MobilePartsList({ parts, activePartId, onPartClick }) {
+// ── Urgency section (collapsible) ─────────────────────────────────────────────
+function UrgencySection({ title, color, parts, activePartId, onPartClick, pricing, rowRefs }) {
+  const [open, setOpen] = useState(true)
+  if (parts.length === 0) return null
+
+  const borderRadius = open ? '8px 8px 0 0' : '8px'
+
   return (
-    <div className="rp-mobile-parts">
-      {parts.map((part, i) => {
-        const isActive = activePartId === part.id
-        return (
+    <div style={{ marginBottom: '0.75rem' }}>
+      {/* Section header (toggle button) */}
+      <button
+        onClick={() => setOpen((v) => !v)}
+        style={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '0.5rem',
+          padding: '0.5rem 0.75rem',
+          background: color + '22',
+          border: `1px solid ${color}66`,
+          borderRadius,
+          cursor: 'pointer',
+          color: 'inherit',
+          textAlign: 'left',
+          fontSize: '0.95rem',
+        }}
+        aria-expanded={open}
+      >
+        <span
+          style={{
+            display: 'inline-block',
+            transition: 'transform 0.2s',
+            transform: open ? 'rotate(0deg)' : 'rotate(-90deg)',
+            fontSize: '0.75rem',
+            lineHeight: 1,
+          }}
+          aria-hidden="true"
+        >
+          ▼
+        </span>
+        <span style={{ fontWeight: 700, color }}>{title}</span>
+        <span style={{ opacity: 0.6, fontSize: '0.82rem' }}>({parts.length})</span>
+      </button>
+
+      {open && (
+        <>
+          {/* Desktop/tablet table */}
           <div
-            key={part.id || i}
-            className={`rp-mobile-row${isActive ? ' rp-mobile-row-active' : ''}`}
-            role="button"
-            tabIndex={0}
-            aria-pressed={isActive}
-            onClick={() => onPartClick(isActive ? null : part.id)}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault()
-                onPartClick(isActive ? null : part.id)
-              }
+            className="rp-table-desktop"
+            style={{
+              overflowX: 'auto',
+              border: `1px solid ${color}44`,
+              borderTop: 'none',
+              borderRadius: '0 0 8px 8px',
             }}
           >
-            <span style={{ fontWeight: 500, fontSize: '0.9rem', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {part.name}
-            </span>
-            <PriorityBadge value={part.priority} />
+            <table style={s.table}>
+              <thead>
+                <tr>
+                  <th style={s.th}>Part Name</th>
+                  <th style={s.th}>Component Group</th>
+                  <th style={s.th}>Brand / Model</th>
+                  <th style={s.th}>Condition</th>
+                  <th style={s.th}>Priority</th>
+                  <th style={s.th}>Condition Notes</th>
+                  <th style={s.th}>Repair Action</th>
+                  <th style={{ ...s.th, minWidth: '200px', cursor: 'default' }}>
+                    Performance Bicycle Pricing
+                  </th>
+                </tr>
+              </thead>
+              <tbody>
+                {parts.map((part, i) => {
+                  const isActive = activePartId === part.id
+                  let rowClass = i % 2 === 0 ? 'rp-row-even' : 'rp-row-odd'
+                  if (isActive) rowClass = 'rp-row-active'
+                  return (
+                    <tr
+                      key={part.id || i}
+                      className={rowClass}
+                      ref={(el) => { if (el && rowRefs) rowRefs.current[part.id] = el }}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => onPartClick(isActive ? null : part.id)}
+                    >
+                      <td style={s.td}>{part.name}</td>
+                      <td style={s.td}>{part.component_group}</td>
+                      <td style={s.td}>{[part.brand, part.model].filter(Boolean).join(' ')}</td>
+                      <td style={s.td}><ConditionBadge value={part.condition} /></td>
+                      <td style={s.td}><PriorityBadge value={part.priority} /></td>
+                      <td style={s.td}>
+                        {part.condition_notes}
+                        {part.repair_notes && (
+                          <div style={{ fontStyle: 'italic', fontSize: '0.8rem', marginTop: '0.3rem', opacity: 0.75 }}>
+                            {part.repair_notes}
+                          </div>
+                        )}
+                      </td>
+                      <td style={s.td}><RepairActionBadge value={part.repair_action} /></td>
+                      <td style={s.td}>
+                        <PricingCell state={pricing ? pricing[part.id] : null} part={part} />
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
-        )
-      })}
+
+          {/* Mobile condensed list */}
+          <div
+            className="rp-mobile-parts"
+            style={{
+              border: `1px solid ${color}44`,
+              borderTop: 'none',
+              borderRadius: '0 0 8px 8px',
+              overflow: 'hidden',
+            }}
+          >
+            {parts.map((part, i) => {
+              const isActive = activePartId === part.id
+              return (
+                <div
+                  key={part.id || i}
+                  className={`rp-mobile-row${isActive ? ' rp-mobile-row-active' : ''}`}
+                  role="button"
+                  tabIndex={0}
+                  aria-pressed={isActive}
+                  ref={(el) => { if (el && rowRefs) rowRefs.current[part.id] = el }}
+                  onClick={() => onPartClick(isActive ? null : part.id)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault()
+                      onPartClick(isActive ? null : part.id)
+                    }
+                  }}
+                >
+                  <span style={{ fontWeight: 500, fontSize: '0.9rem', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                    {part.name}
+                  </span>
+                  <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexShrink: 0 }}>
+                    <RepairActionBadge value={part.repair_action} />
+                    <PriorityBadge value={part.priority} />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </>
+      )}
     </div>
   )
 }
@@ -501,7 +763,6 @@ function MobilePartsList({ parts, activePartId, onPartClick }) {
 export default function ResultsPage() {
   const location = useLocation()
   const navigate = useNavigate()
-  const [sortAsc, setSortAsc] = useState(true) // true = ascending (most urgent first)
   const [activePartId, setActivePartId] = useState(null)
   // Map of part_id → { loading, results, error }
   const [pricing, setPricing] = useState(null)
@@ -604,12 +865,8 @@ export default function ResultsPage() {
   const overallCondition = result.overall_condition || bike.overall_condition
   const summary = result.summary || bike.summary
 
-  // Sort parts by priority (1 = most urgent)
-  const sortedParts = [...parts].sort((a, b) =>
-    sortAsc ? a.priority - b.priority : b.priority - a.priority
-  )
-
-  const toggleSort = () => setSortAsc((v) => !v)
+  // Sort parts ascending (1 = most urgent) for use within sections
+  const sortedParts = [...parts].sort((a, b) => a.priority - b.priority)
 
   return (
     <div style={s.page}>
@@ -675,8 +932,10 @@ export default function ResultsPage() {
           </div>
         </div>
 
-        {/* Right column: part detail panel + parts table */}
+        {/* Right column: summary card + part detail panel + parts table */}
         <div>
+          {/* Maintenance summary card */}
+          <MaintenanceSummaryCard parts={sortedParts} />
           {/* Part detail panel (desktop inline card; mobile fixed bottom sheet) */}
           {(() => {
             const activePart = activePartId ? parts.find((p) => p.id === activePartId) : null
@@ -688,61 +947,21 @@ export default function ResultsPage() {
               />
             )
           })()}
-          {/* Parts analysis table */}
+          {/* Parts analysis — urgency-grouped sections */}
           <div style={s.section}>
             <h2 style={s.sectionTitle}>Parts Analysis ({sortedParts.length} parts)</h2>
-            {/* Desktop/tablet full table */}
-            <div style={s.tableWrapper} className="rp-table-desktop">
-              <table style={s.table}>
-                <thead>
-                  <tr>
-                    <th style={s.th}>Part Name</th>
-                    <th style={s.th}>Component Group</th>
-                    <th style={s.th}>Brand / Model</th>
-                    <th style={s.th}>Condition</th>
-                    <th style={s.th} onClick={toggleSort}>
-                      Priority {sortAsc ? '▲' : '▼'}
-                    </th>
-                    <th style={s.th}>Condition Notes</th>
-                    <th style={{ ...s.th, minWidth: '200px', cursor: 'default' }}>
-                      Performance Bicycle Pricing
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedParts.map((part, i) => {
-                    const isActive = activePartId === part.id
-                    let rowClass = i % 2 === 0 ? 'rp-row-even' : 'rp-row-odd'
-                    if (isActive) rowClass = 'rp-row-active'
-                    return (
-                      <tr
-                        key={part.id || i}
-                        className={rowClass}
-                        ref={(el) => { if (el) rowRefs.current[part.id] = el }}
-                        style={{ cursor: 'pointer' }}
-                        onClick={() => setActivePartId(isActive ? null : part.id)}
-                      >
-                        <td style={s.td}>{part.name}</td>
-                        <td style={s.td}>{part.component_group}</td>
-                        <td style={s.td}>{[part.brand, part.model].filter(Boolean).join(' ')}</td>
-                        <td style={s.td}><ConditionBadge value={part.condition} /></td>
-                        <td style={s.td}><PriorityBadge value={part.priority} /></td>
-                        <td style={s.td}>{part.condition_notes}</td>
-                        <td style={s.td}>
-                          <PricingCell state={pricing ? pricing[part.id] : null} />
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-            {/* Mobile condensed single-line list; tapping opens bottom sheet */}
-            <MobilePartsList
-              parts={sortedParts}
-              activePartId={activePartId}
-              onPartClick={setActivePartId}
-            />
+            {URGENCY_SECTIONS.map(({ key, label, color, test }) => (
+              <UrgencySection
+                key={key}
+                title={label}
+                color={color}
+                parts={sortedParts.filter(test)}
+                activePartId={activePartId}
+                onPartClick={setActivePartId}
+                pricing={pricing}
+                rowRefs={rowRefs}
+              />
+            ))}
           </div>
         </div>
       </div>
