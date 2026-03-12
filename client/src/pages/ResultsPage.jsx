@@ -2,6 +2,7 @@ import { useCallback, useEffect, useRef, useState } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 import BikeImageOverlay from '../components/BikeImageOverlay'
+import CyclingLoader from '../components/CyclingLoader'
 
 // ── Condition badge ──────────────────────────────────────────────────────────
 const CONDITION_CONFIG = {
@@ -126,7 +127,14 @@ function PricingCell({ state, part }) {
     return <span style={ps.error}>Pricing unavailable</span>
   }
   if (!state.results || state.results.length === 0) {
-    return <span style={ps.estimate}>{formatClaudeEstimate(part)}</span>
+    return (
+      <div>
+        <div style={ps.muted}>No parts found — check your local bike shop</div>
+        <div style={{ marginTop: '0.2rem' }}>
+          <span style={ps.estimate}>{formatClaudeEstimate(part)}</span>
+        </div>
+      </div>
+    )
   }
   return (
     <div style={ps.resultList}>
@@ -240,6 +248,12 @@ function PartDetailPanel({ part, pricingState, onClose }) {
                 <span style={dp.label}>Priority</span>
                 <PriorityBadge value={part.priority} />
               </div>
+              {part.repair_action && (
+                <div style={dp.row}>
+                  <span style={dp.label}>Mechanic&apos;s Call</span>
+                  <RepairActionBadge value={part.repair_action} />
+                </div>
+              )}
               {part.condition_notes && (
                 <div style={{ ...dp.row, flexDirection: 'column', alignItems: 'flex-start', gap: '0.25rem' }}>
                   <span style={dp.label}>Condition Notes</span>
@@ -247,7 +261,7 @@ function PartDetailPanel({ part, pricingState, onClose }) {
                 </div>
               )}
               <div style={{ marginTop: '0.5rem' }}>
-                <span style={{ ...dp.label, display: 'block', marginBottom: '0.4rem' }}>Pricing</span>
+                <span style={{ ...dp.label, display: 'block', marginBottom: '0.4rem' }}>Parts Pricing</span>
                 <PricingCell state={pricingState} part={part} />
               </div>
             </div>
@@ -419,40 +433,37 @@ function MaintenanceSummaryCard({ parts }) {
 
   const totalMin = parts.reduce((acc, p) => acc + (p.estimated_cost_min ?? 0), 0)
   const totalMax = parts.reduce((acc, p) => acc + (p.estimated_cost_max ?? 0), 0)
-  const costText = totalMin === 0 && totalMax === 0
-    ? 'Cost unknown'
-    : `Est. $${totalMin} \u2013 $${totalMax} total`
+  const costNumber = totalMin === 0 && totalMax === 0
+    ? 'N/A'
+    : `$${totalMin}\u2013$${totalMax}`
 
   const stats = [
     urgentCount > 0 && {
-      icon: '⚠',
-      label: `${urgentCount} parts need attention`,
-      color: '#EF4444',
+      number: `⚠ ${urgentCount}`,
+      label: 'need attention',
     },
     {
-      icon: '●',
-      label: `${monitorCount} to monitor`,
-      color: '#F59E0B',
+      number: String(monitorCount),
+      label: 'to monitor',
     },
     {
-      icon: '✓',
-      label: `${goodCount} in good shape`,
-      color: '#10B981',
+      number: String(goodCount),
+      label: 'in good shape',
     },
     {
-      icon: '💰',
-      label: costText,
-      color: '#374151',
+      number: costNumber,
+      label: 'est. cost range',
     },
   ].filter(Boolean)
 
   return (
     <div style={sc.card}>
+      <h3 style={sc.title}>🚲 Bike Health Summary</h3>
       <div className="sc-stats">
         {stats.map((stat, i) => (
           <div key={i} style={sc.stat}>
-            <span style={{ ...sc.icon, color: stat.color }}>{stat.icon}</span>
-            <span style={{ ...sc.label, color: stat.color }}>{stat.label}</span>
+            <span style={sc.number}>{stat.number}</span>
+            <span style={sc.label}>{stat.label}</span>
           </div>
         ))}
       </div>
@@ -462,27 +473,33 @@ function MaintenanceSummaryCard({ parts }) {
 
 const sc = {
   card: {
-    background: '#ffffff',
-    border: '1px solid rgba(0,0,0,0.12)',
-    borderRadius: '10px',
-    padding: '16px',
+    background: 'linear-gradient(135deg, #0f172a 0%, #065F46 100%)',
+    borderRadius: '16px',
+    padding: '24px',
     marginBottom: '1rem',
-    boxShadow: '0 1px 4px rgba(0,0,0,0.08)',
-    color: '#1a1a1a',
+    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.1)',
+    color: '#ffffff',
+  },
+  title: {
+    margin: '0 0 1rem 0',
+    fontSize: '1rem',
+    fontWeight: 600,
+    color: '#ffffff',
   },
   stat: {
     display: 'flex',
-    alignItems: 'center',
-    gap: '0.4rem',
+    flexDirection: 'column',
+    gap: '0.2rem',
   },
-  icon: {
-    fontSize: '1rem',
+  number: {
+    fontSize: '1.75rem',
+    fontWeight: 700,
+    color: '#ffffff',
     lineHeight: 1,
-    flexShrink: 0,
   },
   label: {
-    fontSize: '0.88rem',
-    fontWeight: 600,
+    fontSize: '0.8rem',
+    color: 'rgba(255,255,255,0.8)',
     lineHeight: 1.3,
   },
 }
@@ -529,10 +546,10 @@ if (typeof document !== 'undefined' && !document.getElementById('__results_layou
         align-items: start;
       }
     }
-    /* Desktop (≥1024px): two-column, wider left */
+    /* Desktop (≥1024px): left column 55% of layout */
     @media (min-width: 1024px) {
       .rp-columns {
-        grid-template-columns: minmax(280px, 360px) 1fr;
+        grid-template-columns: 55fr 45fr;
       }
     }
     .rp-row-even td { background: rgba(255,255,255,0.04); }
@@ -578,25 +595,11 @@ if (typeof document !== 'undefined' && !document.getElementById('__results_layou
         display: block;
       }
     }
-    /* Mobile condensed parts list */
-    .rp-mobile-parts { display: none; }
+    /* Collapsible part rows */
+    .rp-part-row:hover { background: rgba(255,255,255,0.04); }
+    .rp-part-row:active { background: rgba(99,179,237,0.08); }
+    /* Touch targets: overlay regions at least 44×44px */
     @media (max-width: 767px) {
-      .rp-table-desktop { display: none; }
-      .rp-mobile-parts { display: block; }
-      .rp-mobile-row {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 0.5rem;
-        padding: 0.75rem;
-        min-height: 44px;
-        border-bottom: 1px solid rgba(255,255,255,0.07);
-        cursor: pointer;
-        box-sizing: border-box;
-      }
-      .rp-mobile-row:active { background: rgba(99,179,237,0.08); }
-      .rp-mobile-row-active { background: rgba(99,179,237,0.15) !important; }
-      /* Touch targets: overlay regions at least 44×44px */
       .bio-overlay {
         min-width: 44px;
         min-height: 44px;
@@ -606,154 +609,229 @@ if (typeof document !== 'undefined' && !document.getElementById('__results_layou
   document.head.appendChild(style)
 }
 
-// ── Urgency section (collapsible) ─────────────────────────────────────────────
-function UrgencySection({ title, color, parts, activePartId, onPartClick, pricing, rowRefs }) {
+// ── Urgency section (collapsible rows + expand-all toggle) ────────────────────
+function UrgencySection({ title, color, parts, activePartId, pricing, rowRefs }) {
   const [open, setOpen] = useState(true)
+  const [expandedRows, setExpandedRows] = useState(new Set())
   if (parts.length === 0) return null
+
+  const allExpanded = parts.length > 0 && parts.every((p) => expandedRows.has(p.id ?? p.name))
+
+  const toggleRow = (id) => {
+    setExpandedRows((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+
+  const toggleExpandAll = () => {
+    if (allExpanded) {
+      setExpandedRows(new Set())
+    } else {
+      setExpandedRows(new Set(parts.map((p) => p.id ?? p.name)))
+    }
+  }
 
   const borderRadius = open ? '8px 8px 0 0' : '8px'
 
   return (
     <div style={{ marginBottom: '0.75rem' }}>
-      {/* Section header (toggle button) */}
-      <button
-        onClick={() => setOpen((v) => !v)}
+      {/* Section header: collapse toggle + Expand All link */}
+      <div
         style={{
-          width: '100%',
           display: 'flex',
           alignItems: 'center',
-          gap: '0.5rem',
           padding: '0.5rem 0.75rem',
           background: color + '22',
           border: `1px solid ${color}66`,
           borderRadius,
-          cursor: 'pointer',
-          color: 'inherit',
-          textAlign: 'left',
-          fontSize: '0.95rem',
+          boxSizing: 'border-box',
         }}
-        aria-expanded={open}
       >
-        <span
+        <button
+          onClick={() => setOpen((v) => !v)}
           style={{
-            display: 'inline-block',
-            transition: 'transform 0.2s',
-            transform: open ? 'rotate(0deg)' : 'rotate(-90deg)',
-            fontSize: '0.75rem',
-            lineHeight: 1,
+            flex: 1,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '0.5rem',
+            background: 'none',
+            border: 'none',
+            cursor: 'pointer',
+            color: 'inherit',
+            textAlign: 'left',
+            fontSize: '0.95rem',
+            padding: 0,
           }}
-          aria-hidden="true"
+          aria-expanded={open}
         >
-          ▼
-        </span>
-        <span style={{ fontWeight: 700, color }}>{title}</span>
-        <span style={{ opacity: 0.6, fontSize: '0.82rem' }}>({parts.length})</span>
-      </button>
+          <span
+            style={{
+              display: 'inline-block',
+              transition: 'transform 0.2s',
+              transform: open ? 'rotate(0deg)' : 'rotate(-90deg)',
+              fontSize: '0.75rem',
+              lineHeight: 1,
+            }}
+            aria-hidden="true"
+          >
+            ▼
+          </span>
+          <span style={{ fontWeight: 700, color }}>{title}</span>
+          <span style={{ opacity: 0.6, fontSize: '0.82rem' }}>({parts.length})</span>
+        </button>
+        {open && (
+          <button
+            onClick={toggleExpandAll}
+            style={{
+              background: 'none',
+              border: 'none',
+              cursor: 'pointer',
+              color,
+              fontSize: '0.82rem',
+              fontWeight: 600,
+              padding: '0 0.25rem',
+              flexShrink: 0,
+              textDecoration: 'underline',
+            }}
+          >
+            {allExpanded ? 'Collapse All' : 'Expand All'}
+          </button>
+        )}
+      </div>
 
       {open && (
-        <>
-          {/* Desktop/tablet table */}
-          <div
-            className="rp-table-desktop"
-            style={{
-              overflowX: 'auto',
-              border: `1px solid ${color}44`,
-              borderTop: 'none',
-              borderRadius: '0 0 8px 8px',
-            }}
-          >
-            <table style={s.table}>
-              <thead>
-                <tr>
-                  <th style={s.th}>Part Name</th>
-                  <th style={s.th}>Component Group</th>
-                  <th style={s.th}>Brand / Model</th>
-                  <th style={s.th}>Condition</th>
-                  <th style={s.th}>Priority</th>
-                  <th style={s.th}>Condition Notes</th>
-                  <th style={s.th}>Repair Action</th>
-                  <th style={{ ...s.th, minWidth: '200px', cursor: 'default' }}>
-                    Performance Bicycle Pricing
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {parts.map((part, i) => {
-                  const isActive = activePartId === part.id
-                  let rowClass = i % 2 === 0 ? 'rp-row-even' : 'rp-row-odd'
-                  if (isActive) rowClass = 'rp-row-active'
-                  return (
-                    <tr
-                      key={part.id || i}
-                      className={rowClass}
-                      ref={(el) => { if (el && rowRefs) rowRefs.current[part.id] = el }}
-                      style={{ cursor: 'pointer' }}
-                      onClick={() => onPartClick(isActive ? null : part.id)}
-                    >
-                      <td style={s.td}>{part.name}</td>
-                      <td style={s.td}>{part.component_group}</td>
-                      <td style={s.td}>{[part.brand, part.model].filter(Boolean).join(' ')}</td>
-                      <td style={s.td}><ConditionBadge value={part.condition} /></td>
-                      <td style={s.td}><PriorityBadge value={part.priority} /></td>
-                      <td style={s.td}>
-                        {part.condition_notes}
-                        {part.repair_notes && (
-                          <div style={{ fontStyle: 'italic', fontSize: '0.8rem', marginTop: '0.3rem', opacity: 0.75 }}>
-                            {part.repair_notes}
-                          </div>
-                        )}
-                      </td>
-                      <td style={s.td}><RepairActionBadge value={part.repair_action} /></td>
-                      <td style={s.td}>
-                        <PricingCell state={pricing ? pricing[part.id] : null} part={part} />
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
+        <div
+          style={{
+            border: `1px solid ${color}44`,
+            borderTop: 'none',
+            borderRadius: '0 0 8px 8px',
+            overflow: 'hidden',
+          }}
+        >
+          {parts.map((part, i) => {
+            const rowId = part.id ?? part.name
+            const isExpanded = expandedRows.has(rowId)
+            const isActive = activePartId === part.id
+            const brandModel = [part.brand, part.model].filter(Boolean).join(' ')
 
-          {/* Mobile condensed list */}
-          <div
-            className="rp-mobile-parts"
-            style={{
-              border: `1px solid ${color}44`,
-              borderTop: 'none',
-              borderRadius: '0 0 8px 8px',
-              overflow: 'hidden',
-            }}
-          >
-            {parts.map((part, i) => {
-              const isActive = activePartId === part.id
-              return (
+            return (
+              <div
+                key={part.id || i}
+                ref={(el) => { if (el && rowRefs) rowRefs.current[part.id] = el }}
+                style={{
+                  borderBottom: i < parts.length - 1 ? '1px solid rgba(255,255,255,0.07)' : 'none',
+                  background: isActive
+                    ? 'rgba(99,179,237,0.15)'
+                    : i % 2 === 0 ? 'rgba(255,255,255,0.04)' : 'transparent',
+                }}
+              >
+                {/* Compact single-line row */}
                 <div
-                  key={part.id || i}
-                  className={`rp-mobile-row${isActive ? ' rp-mobile-row-active' : ''}`}
                   role="button"
                   tabIndex={0}
-                  aria-pressed={isActive}
-                  ref={(el) => { if (el && rowRefs) rowRefs.current[part.id] = el }}
-                  onClick={() => onPartClick(isActive ? null : part.id)}
+                  aria-expanded={isExpanded}
+                  className="rp-part-row"
+                  onClick={() => toggleRow(rowId)}
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' || e.key === ' ') {
                       e.preventDefault()
-                      onPartClick(isActive ? null : part.id)
+                      toggleRow(rowId)
                     }
                   }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.55rem 0.75rem',
+                    cursor: 'pointer',
+                    minHeight: '44px',
+                    boxSizing: 'border-box',
+                    overflow: 'hidden',
+                  }}
                 >
-                  <span style={{ fontWeight: 500, fontSize: '0.9rem', flex: 1, minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <span style={{
+                    fontWeight: 500,
+                    fontSize: '0.9rem',
+                    flex: 1,
+                    minWidth: 0,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}>
                     {part.name}
                   </span>
-                  <div style={{ display: 'flex', gap: '0.4rem', alignItems: 'center', flexShrink: 0 }}>
-                    <RepairActionBadge value={part.repair_action} />
+                  <div style={{ display: 'flex', gap: '0.35rem', alignItems: 'center', flexShrink: 0 }}>
+                    <ConditionBadge value={part.condition} />
                     <PriorityBadge value={part.priority} />
+                    <RepairActionBadge value={part.repair_action} />
                   </div>
+                  <span
+                    style={{ fontSize: '1.1rem', lineHeight: 1, flexShrink: 0, opacity: 0.7 }}
+                    aria-hidden="true"
+                  >
+                    {isExpanded ? '‹' : '›'}
+                  </span>
                 </div>
-              )
-            })}
-          </div>
-        </>
+
+                {/* Expanded detail */}
+                {isExpanded && (
+                  <div style={{
+                    padding: '0.5rem 0.75rem 0.75rem 1rem',
+                    borderTop: '1px solid rgba(255,255,255,0.07)',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '0.45rem',
+                    fontSize: '0.88rem',
+                  }}>
+                    {(part.component_group || brandModel) && (
+                      <div style={{ display: 'flex', gap: '1rem', flexWrap: 'wrap' }}>
+                        {part.component_group && (
+                          <span>
+                            <span style={{ opacity: 0.6, fontWeight: 600 }}>Group: </span>
+                            {part.component_group}
+                          </span>
+                        )}
+                        {brandModel && (
+                          <span>
+                            <span style={{ opacity: 0.6, fontWeight: 600 }}>Brand/Model: </span>
+                            {brandModel}
+                          </span>
+                        )}
+                      </div>
+                    )}
+                    {part.condition_notes && (
+                      <div>
+                        <span style={{ opacity: 0.6, fontWeight: 600 }}>Condition Notes: </span>
+                        {part.condition_notes}
+                      </div>
+                    )}
+                    {part.repair_action && (
+                      <div>
+                        <span style={{ opacity: 0.6, fontWeight: 600 }}>Mechanic&apos;s Call: </span>
+                        <RepairActionBadge value={part.repair_action} />
+                      </div>
+                    )}
+                    {part.repair_notes && (
+                      <div style={{ fontStyle: 'italic' }}>
+                        <span style={{ opacity: 0.6, fontWeight: 600, fontStyle: 'normal' }}>Repair Notes: </span>
+                        {part.repair_notes}
+                      </div>
+                    )}
+                    <div>
+                      <span style={{ opacity: 0.6, fontWeight: 600, display: 'block', marginBottom: '0.25rem' }}>
+                        Parts Pricing:
+                      </span>
+                      <PricingCell state={pricing ? pricing[part.id] : null} part={part} />
+                    </div>
+                  </div>
+                )}
+              </div>
+            )
+          })}
+        </div>
       )}
     </div>
   )
@@ -908,7 +986,7 @@ export default function ResultsPage() {
             )}
             {reanalyzing && (
               <div style={s.photoLoadingOverlay} aria-hidden="true">
-                <span style={s.overlaySpinner} />
+                <CyclingLoader message="Reanalyzing your bike\u2026" />
               </div>
             )}
           </div>
@@ -922,7 +1000,7 @@ export default function ResultsPage() {
               <MetaRow label="Color"          value={bike.color} />
               <MetaRow label="Frame Material" value={bike.frame_material} />
               <MetaRow
-                label="Overall Condition"
+                label="Bike Health"
                 value={overallCondition
                   ? <ConditionBadge value={overallCondition} />
                   : null}
@@ -949,7 +1027,7 @@ export default function ResultsPage() {
           })()}
           {/* Parts analysis — urgency-grouped sections */}
           <div style={s.section}>
-            <h2 style={s.sectionTitle}>Parts Analysis ({sortedParts.length} parts)</h2>
+            <h2 style={s.sectionTitle}>Component Report ({sortedParts.length} parts)</h2>
             {URGENCY_SECTIONS.map(({ key, label, color, test }) => (
               <UrgencySection
                 key={key}
@@ -957,7 +1035,6 @@ export default function ResultsPage() {
                 color={color}
                 parts={sortedParts.filter(test)}
                 activePartId={activePartId}
-                onPartClick={setActivePartId}
                 pricing={pricing}
                 rowRefs={rowRefs}
               />

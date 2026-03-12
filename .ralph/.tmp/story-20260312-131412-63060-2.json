@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "total": 7,
+  "remaining": 6,
+  "quality_gates": [
+    "npm run lint",
+    "npm test"
+  ],
+  "id": "US-002",
+  "title": "Cycling-themed loading animation \u2014 replace generic spinner"
+}

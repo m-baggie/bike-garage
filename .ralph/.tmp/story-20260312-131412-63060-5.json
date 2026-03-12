@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "total": 7,
+  "remaining": 3,
+  "quality_gates": [
+    "npm run lint",
+    "npm test"
+  ],
+  "id": "US-005",
+  "title": "Polish maintenance summary card with gradient and cycling icon"
+}

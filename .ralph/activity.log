@@ -1,6 +1,13 @@
 # Activity Log
 
 ## Run Summary
+- 2026-03-12 14:24:17 | run=20260312-142020-23738 | iter=1 | mode=build | story=US-006 | duration=236s | status=success
+- 2026-03-12 14:01:36 | run=20260312-135645-15469 | iter=1 | mode=build | story=US-007 | duration=291s | status=success
+- 2026-03-12 13:52:04 | run=20260312-131412-63060 | iter=5 | mode=build | story=US-005 | duration=363s | status=success
+- 2026-03-12 13:45:58 | run=20260312-131412-63060 | iter=4 | mode=build | story=US-004 | duration=514s | status=success
+- 2026-03-12 13:37:21 | run=20260312-131412-63060 | iter=3 | mode=build | story=US-003 | duration=535s | status=success
+- 2026-03-12 13:28:23 | run=20260312-131412-63060 | iter=2 | mode=build | story=US-002 | duration=496s | status=success
+- 2026-03-12 13:20:03 | run=20260312-131412-63060 | iter=1 | mode=build | story=US-001 | duration=351s | status=success
 - 2026-03-12 12:38:49 | run=20260312-121104-23111 | iter=4 | mode=build | story=US-004 | duration=543s | status=success
 - 2026-03-12 12:29:43 | run=20260312-121104-23111 | iter=3 | mode=build | story=US-003 | duration=415s | status=success
 - 2026-03-12 12:22:45 | run=20260312-121104-23111 | iter=2 | mode=build | story=US-002 | duration=333s | status=success
@@ -157,3 +164,38 @@ Thu Mar 12 09:10:55 EDT 2026
 [2026-03-12 12:29:48] ITERATION 4 start (mode=build story=US-004)
 - 2026-03-12 12:35 | US-004 | MaintenanceSummaryCard implemented, browser verified, committed 483a1e1
 [2026-03-12 12:38:49] ITERATION 4 end (duration=543s)
+[2026-03-12 13:14:14] ITERATION 1 start (mode=build story=US-001)
+[2026-03-12 13:15:45] [US-001] Starting work — fix text contrast, replace #213547 with --text-primary CSS token
+[2026-03-12 13:19:12] [US-001] CSS tokens added and #213547 replaced with var(--text-primary) in index.css
+[2026-03-12 13:19:12] [US-001] lint PASS, tests PASS (25/25), browser verified: --text-primary=#1e293b, --text-secondary=#475569, no #213547
+[2026-03-12 13:19:54] [US-001] Progress log updated. Story complete.
+[2026-03-12 13:20:03] ITERATION 1 end (duration=351s)
+[2026-03-12 13:20:10] ITERATION 2 start (mode=build story=US-002)
+[2026-03-12 13:30] US-002: Created CyclingLoader.jsx — bicycle wheel SVG, 8 spokes, --priority-5 blue, 1.2s spin
+[2026-03-12 13:30] US-002: Integrated CyclingLoader into UploadPage (replaces button during analysis) and ResultsPage (replaces overlay spinner during reanalysis)
+[2026-03-12 13:30] US-002: lint PASS, tests PASS (25/25), browser verified — wheel spins + text visible, button hidden, no ghost spinner
+[2026-03-12 13:30] US-002: Committed 11a531a. Progress log updated. Story complete.
+[2026-03-12 13:28:23] ITERATION 2 end (duration=496s)
+[2026-03-12 13:28:29] ITERATION 3 start (mode=build story=US-003)
+[2026-03-12 13:30:24] US-003: starting work — enlarge hero, add priority pins
+[2026-03-12 13:35:36] US-003: browser verified — 5 pins visible, 55/45 layout confirmed, null-BB part has no pin
+[2026-03-12 13:37:05] US-003: progress log updated. Story complete.
+[2026-03-12 13:37:21] ITERATION 3 end (duration=535s)
+[2026-03-12 13:37:26] ITERATION 4 start (mode=build story=US-004)
+[2026-03-12 13:39:43] US-004: starting implementation — compact collapsible parts list with expand-all toggle
+[2026-03-12 13:45:35] US-004: implementation complete, tests pass, browser verified, committed 1077c15
+[2026-03-12 13:45:58] ITERATION 4 end (duration=514s)
+[2026-03-12 13:46:03] ITERATION 5 start (mode=build story=US-005)
+[2026-03-12 13:47:37] US-005: starting work — polish maintenance summary card with gradient and cycling icon
+[2026-03-12 13:51:18] US-005: code changes complete — gradient card with title/stats, browser verified
+[2026-03-12 13:51:57] US-005: progress log updated, story complete
+[2026-03-12 13:52:04] ITERATION 5 end (duration=363s)
+[2026-03-12 13:52:10] ITERATION 6 start (mode=build story=US-006)
+[2026-03-12 13:56:47] ITERATION 1 start (mode=build story=US-007)
+[2026-03-12 14:01:36] ITERATION 1 end (duration=291s)
+[2026-03-12 14:20:21] ITERATION 1 start (mode=build story=US-006)
+[2026-03-12 14:21:20] US-006: Starting run 20260312-142020-23738 - implementation already committed in fd83092, running quality gates
+[2026-03-12 14:21:49] US-006: Quality gates PASS - lint and 25/25 tests pass. Implementation verified in code.
+[2026-03-12 14:23:14] US-006: Browser verification PASS - accent bar visible at top of upload page, scrollbar styles confirmed in index.css
+[2026-03-12 14:23:48] US-006: Progress log updated, committing logs
+[2026-03-12 14:24:17] ITERATION 1 end (duration=236s)

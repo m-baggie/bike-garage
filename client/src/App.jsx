@@ -9,6 +9,15 @@ function NotFound() {
 export default function App() {
   return (
     <BrowserRouter>
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '4px',
+        background: 'linear-gradient(90deg, var(--priority-5) 0%, var(--condition-good) 100%)',
+        zIndex: 9999,
+      }} />
       <Routes>
         <Route path="/" element={<UploadPage />} />
         <Route path="/results" element={<ResultsPage />} />

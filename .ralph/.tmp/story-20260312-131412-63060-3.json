@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "total": 7,
+  "remaining": 5,
+  "quality_gates": [
+    "npm run lint",
+    "npm test"
+  ],
+  "id": "US-003",
+  "title": "Enlarge bike photo hero and add always-visible priority pins"
+}

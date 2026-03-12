@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "total": 7,
+  "remaining": 4,
+  "quality_gates": [
+    "npm run lint",
+    "npm test"
+  ],
+  "id": "US-004",
+  "title": "Compact collapsible parts list with expand-all toggle"
+}

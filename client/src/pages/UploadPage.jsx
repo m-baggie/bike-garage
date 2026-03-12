@@ -1,6 +1,7 @@
 import { useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
+import CyclingLoader from '../components/CyclingLoader'
 
 const ACCEPTED_TYPES = ['image/jpeg', 'image/png', 'image/webp']
 
@@ -154,7 +155,10 @@ export default function UploadPage() {
   return (
     <div style={styles.page}>
       <form style={styles.card} onSubmit={onSubmit}>
-        <h1 style={styles.heading}>Analyze Your Bike</h1>
+        <h1 style={styles.heading}>Bike Inspection</h1>
+        <p style={{ ...styles.dropText, textAlign: 'center', margin: 0 }}>
+          Drop your bike photo to get a full component diagnosis
+        </p>
 
         <div
           style={styles.dropZone(isDragging)}
@@ -192,18 +196,17 @@ export default function UploadPage() {
 
         {error && <p style={styles.error}>{error}</p>}
 
-        <button
-          type="submit"
-          disabled={!file || loading}
-          style={styles.analyzeBtn(!!file && !loading)}
-        >
-          {loading ? (
-            <>
-              <span style={styles.btnSpinner} aria-hidden="true" />
-              Analyzing…
-            </>
-          ) : 'Analyze Bike'}
-        </button>
+        {loading ? (
+          <CyclingLoader />
+        ) : (
+          <button
+            type="submit"
+            disabled={!file}
+            style={styles.analyzeBtn(!!file)}
+          >
+            Run Diagnosis
+          </button>
+        )}
       </form>
     </div>
   )

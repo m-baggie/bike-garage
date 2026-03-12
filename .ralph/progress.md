@@ -950,3 +950,233 @@ Run summary: /Users/mbaggie/Dev/bike-garage.feat-phase2-1-repair-focus/.ralph/ru
   - React Router v6 internal state format is `{ usr: actualState, key: 'xxx' }` for `pushState`/`popstate` browser test injection
   - `useState` initializer runs only on mount; re-injecting router state won't update it — use a fresh page for edge-case browser tests
 ---
+
+## [2026-03-12 13:20] - US-001: Fix text contrast — replace dark navy text color with legible alternative
+Thread:
+Run: 20260312-131412-63060 (iteration 1)
+Run log: /Users/mbaggie/Dev/bike-garage.feat-phase2-3-ui-polish/.ralph/runs/run-20260312-131412-63060-iter-1.log
+Run summary: /Users/mbaggie/Dev/bike-garage.feat-phase2-3-ui-polish/.ralph/runs/run-20260312-131412-63060-iter-1.md
+- Guardrails reviewed: yes
+- No-commit run: false
+- Commit: e54139a fix(ui): replace #213547 with --text-primary CSS token
+- Post-commit status: `.agents/tasks/prd-bike-garage-phase2-3-ui-polish.json` modified (pre-existing Ralph-managed change, not touched by this run)
+- Verification:
+  - Command: `npm run lint` -> PASS
+  - Command: `npm test` -> PASS (25/25 server tests, client placeholder)
+  - Browser: `--text-primary=#1e293b`, `--text-secondary=#475569` confirmed in DOM; no `#213547` found
+- Files changed:
+  - client/src/index.css (added --text-primary and --text-secondary tokens to :root; replaced color:#213547 with color:var(--text-primary) in light media query)
+- What was implemented:
+  - Added `--text-primary: #1e293b` and `--text-secondary: #475569` CSS custom properties to `:root` in index.css
+  - Replaced the single occurrence of `color: #213547` (Vite default light-mode text) with `color: var(--text-primary)` in `@media (prefers-color-scheme: light)`
+  - All body text, labels, headings, and table content now cascade from `--text-primary` in light mode
+  - No raw `#213547` hex remains anywhere in the codebase
+- **Learnings for future iterations:**
+  - Node 18 cannot run Vite 7 dev server (requires Node >=20); use `nvm use 20` before `npm run dev`
+  - ESLint node_modules can become corrupt after switching Node versions; `rm -rf client/node_modules && npm install --prefix client` fixes it
+  - The `#213547` color existed only in the `@media (prefers-color-scheme: light)` block — Vite scaffolding default, no inline styles in components used it
+---
+
+## [2026-03-12 13:30] - US-002: Cycling-themed loading animation — replace generic spinner
+Thread:
+Run: 20260312-131412-63060 (iteration 2)
+Run log: /Users/mbaggie/Dev/bike-garage.feat-phase2-3-ui-polish/.ralph/runs/run-20260312-131412-63060-iter-2.log
+Run summary: /Users/mbaggie/Dev/bike-garage.feat-phase2-3-ui-polish/.ralph/runs/run-20260312-131412-63060-iter-2.md
+- Guardrails reviewed: yes
+- No-commit run: false
+- Commit: 11a531a feat(ui): add CyclingLoader — replace generic spinners (US-002)
+- Post-commit status: clean
+- Verification:
+  - Command: `npm run lint` -> PASS
+  - Command: `npm test` -> PASS (25/25 server tests, client placeholder)
+  - Browser (UploadPage loading): spinning SVG present=true, "Spinning up" text=true, submit button hidden=true
+  - Browser (initial load): CyclingLoader not visible (correct — no ghost spinner)
+- Files changed:
+  - client/src/components/CyclingLoader.jsx (new — bicycle wheel SVG spinner component)
+  - client/src/pages/UploadPage.jsx (import CyclingLoader; replace button spinner with CyclingLoader during loading)
+  - client/src/pages/ResultsPage.jsx (import CyclingLoader; replace overlaySpinner with CyclingLoader in photo overlay)
+- What was implemented:
+  - Created CyclingLoader component: 64×64 SVG wheel (rim circle, hub circle, 8 spokes at 45° intervals), stroke color var(--priority-5) (#1D4ED8), animated via existing @keyframes spin at 1.2s linear infinite
+  - Text below wheel defaults to "Spinning up your diagnosis…" in var(--text-secondary) color
+  - Optional `message` prop overrides the default text
+  - UploadPage: when loading=true, submit button is replaced by CyclingLoader; button returns when loading completes (no ghost spinner)
+  - ResultsPage: reanalysis overlay replaces plain CSS spinner with CyclingLoader (message="Reanalyzing your bike…")
+- **Learnings for future iterations:**
+  - The dev browser server runs on port 9222 (not 7822); `connect()` defaults to http://localhost:9222
+  - Use `nvm use 20` before any Vite or npx tsx commands (Node 18 incompatible with Vite 7 and tsx ESM)
+  - The @keyframes spin keyframe already existed in index.css — just reference it in the SVG animation property
+---
+
+## [2026-03-12 13:36] - US-003: Enlarge bike photo hero and add always-visible priority pins
+Thread:
+Run: 20260312-131412-63060 (iteration 3)
+Run log: /Users/mbaggie/Dev/bike-garage.feat-phase2-3-ui-polish/.ralph/runs/run-20260312-131412-63060-iter-3.log
+Run summary: /Users/mbaggie/Dev/bike-garage.feat-phase2-3-ui-polish/.ralph/runs/run-20260312-131412-63060-iter-3.md
+- Guardrails reviewed: yes
+- No-commit run: false
+- Commit: d96fbf2 feat(ui): enlarge photo hero and add always-visible priority pins
+- Post-commit status: clean
+- Verification:
+  - Command: `npm run lint` -> PASS
+  - Command: `npm test` -> PASS (25/25 server tests)
+  - Browser: pins visible (5 colored dots, Stem/null-BB omitted), 55/45 grid confirmed at 1440px
+- Files changed:
+  - client/src/components/BikeImageOverlay.jsx
+  - client/src/pages/ResultsPage.jsx
+  - client/src/index.css (light-theme tokens applied unconditionally — leftover from US-001)
+- What was implemented:
+  - PRIORITY_COLORS map in BikeImageOverlay using --priority-N CSS variables
+  - Photo container: borderRadius 12px + boxShadow 0 8px 32px rgba(0,0,0,0.18)
+  - Priority pins rendered as separate second pass after overlays: 12px circles, priority-colored fill, 2px white border, always visible (pointerEvents: none, zIndex:2)
+  - Hover scale(1.3) driven by hoveredId state (transition 0.2s ease)
+  - Active pin: 16px + ring via boxShadow using priority color
+  - HTML title attribute on each pin for tooltip
+  - Parts with null boundingBox: filtered by existing overlayParts — no pin rendered
+  - Desktop grid changed to 55fr/45fr for ≈55% left column
+- **Learnings for future iterations:**
+  - Dev server requires Node 20+ (Vite incompatible with Node 18). Use `nvm use 20` or check .nvmrc
+  - Browser server (dev-browser) may already be running on port 9222; skip restart if so
+  - Pins rendered in second map() after overlays ensures pins are visually on top while overlays handle interactivity
+  - CSS transitions on width/height for pin size change work but are subtle; state-driven approach avoids CSS class injection
+---
+
+## [2026-03-12 14:10] - US-004: Compact collapsible parts list with expand-all toggle
+Thread:
+Run: 20260312-131412-63060 (iteration 4)
+Run log: /Users/mbaggie/Dev/bike-garage.feat-phase2-3-ui-polish/.ralph/runs/run-20260312-131412-63060-iter-4.log
+Run summary: /Users/mbaggie/Dev/bike-garage.feat-phase2-3-ui-polish/.ralph/runs/run-20260312-131412-63060-iter-4.md
+- Guardrails reviewed: yes
+- No-commit run: false
+- Commit: 1077c15 feat(ui): compact collapsible parts list with expand-all toggle
+- Post-commit status: clean (only .ralph/.tmp/ untracked files, Ralph-managed)
+- Verification:
+  - Command: `npm run lint` -> PASS
+  - Command: `npm test` -> PASS (25/25 server tests; client placeholder)
+  - Browser: navigated to /results with mock data, verified compact rows, Expand All/Collapse All, single row expand
+- Files changed:
+  - client/src/pages/ResultsPage.jsx
+  - client/src/index.css (minor, via git add)
+- What was implemented:
+  - Replaced flat desktop table + separate mobile list with a single unified collapsible-row list inside each UrgencySection
+  - Each part row defaults to one compact line: name (font-weight 500) + ConditionBadge + PriorityBadge + RepairActionBadge + › chevron
+  - Clicking anywhere on a row toggles inline expand; expanded shows Group, Brand/Model, Condition Notes, Repair Notes (italic), and Pricing
+  - Expanded state shows ‹ chevron; collapsed shows ›
+  - Section header gains an "Expand All" / "Collapse All" link (right-aligned) that toggles all rows in that open section
+  - Section-level ▼ collapse behavior unchanged
+  - `onPartClick` removed from UrgencySection (photo overlay pin still sets activePartId independently)
+  - Hover/active CSS added via `.rp-part-row` class in injected style block
+  - `rp-table-desktop` / `rp-mobile-parts` responsive split removed; single list works for all screen sizes
+- **Learnings for future iterations:**
+  - Browser verification: use `page.route()` to intercept `/api/analyze` and `/api/pricing`, then drive the real upload flow — this avoids the React Router state injection problem
+  - `npx tsx` needs `nvm use 20` (Node v18 on this machine; use `source ~/.nvm/nvm.sh && nvm use 20`)
+  - `ralph log` helper script doesn't exist in this repo; append directly to `.ralph/activity.log`
+  - React `useState(new Set())` pattern works well for toggling sets of expanded row IDs
+  - The `??` nullish coalescing operator is safe to use as ESLint (eslint-config-react-app / default Vite config) supports modern JS
+---
+
+## 2026-03-12 14:10 - US-005: Polish maintenance summary card with gradient and cycling icon
+Thread:
+Run: 20260312-131412-63060 (iteration 5)
+Run log: /Users/mbaggie/Dev/bike-garage.feat-phase2-3-ui-polish/.ralph/runs/run-20260312-131412-63060-iter-5.log
+Run summary: /Users/mbaggie/Dev/bike-garage.feat-phase2-3-ui-polish/.ralph/runs/run-20260312-131412-63060-iter-5.md
+- Guardrails reviewed: yes
+- No-commit run: false
+- Commit: 7cc3c1e feat(ui): polish maintenance summary card with gradient and cycling icon
+- Post-commit status: clean (PRD JSON and .tmp files are intentionally excluded)
+- Verification:
+  - Command: npm run lint -> PASS
+  - Command: npm test -> PASS (25/25 server tests)
+  - Browser: gradient card with white text, 🚲 Bike Health Summary title, large stat numbers verified
+  - Browser (mobile 375px): 2x2 grid, no urgent stat hidden correctly, card renders without collapse
+- Files changed:
+  - client/src/pages/ResultsPage.jsx
+- What was implemented:
+  Redesigned MaintenanceSummaryCard to meet US-005 acceptance criteria:
+  - Background gradient: linear-gradient(135deg, #0f172a 0%, #065F46 100%)
+  - All text white (#ffffff)
+  - Stats restructured: large number (1.75rem/700) + small label (0.8rem, rgba opacity) stacked
+  - Added 🚲 Bike Health Summary h3 heading
+  - border-radius: 16px, padding: 24px, inset 0 1px 0 rgba(255,255,255,0.1) box-shadow
+  - Existing mobile 2x2 grid CSS (sc-stats) preserved unchanged
+  - Negative case (0 urgent parts): urgent stat correctly hidden, card renders normally
+- **Learnings for future iterations:**
+  - Dev server needs Node 20 (nvm use 20); port conflicts are common — check which port Vite settled on
+  - Browser state injection: use history.replaceState({result, usr:{result}}, '', '/results') + reload() to navigate ResultsPage with mock data
+  - Inline opacity on label span causes no issues in React; rgba(255,255,255,0.8) is equivalent and avoids opacity cascade concerns
+---
+## [2026-03-12 14:00] - US-006: Minimal custom scrollbars and top accent bar
+Thread: 
+Run: 20260312-131412-63060 (iteration 6)
+Run log: /Users/mbaggie/Dev/bike-garage.feat-phase2-3-ui-polish/.ralph/runs/run-20260312-131412-63060-iter-6.log
+Run summary: /Users/mbaggie/Dev/bike-garage.feat-phase2-3-ui-polish/.ralph/runs/run-20260312-131412-63060-iter-6.md
+- Guardrails reviewed: yes
+- No-commit run: false
+- Commit: fd83092 feat(ui): add custom scrollbars and top accent bar
+- Post-commit status: clean (feature files only)
+- Verification:
+  - Command: npm run lint -> PASS
+  - Command: npm test -> PASS (25/25 server tests)
+  - Browser: accent bar fixed position 4px at top, gradient confirmed, scrollbar styles confirmed
+- Files changed:
+  - client/src/index.css
+  - client/src/App.jsx
+- What was implemented:
+  - Added `::-webkit-scrollbar` global styles (5px width/height, transparent track, rgba(100,108,255) thumb, 999px border-radius, hover state)
+  - Added fixed 4px top accent bar div in App.jsx with `linear-gradient(90deg, var(--priority-5), var(--condition-good))`, z-index 9999
+  - Accent bar uses `position: fixed` so it does not shift page content
+- **Learnings for future iterations:**
+  - Vite requires Node.js ≥20; dev server must be started with `nvm use 20`
+  - Browser dev server (skills/dev-browser/server.sh) needs `nvm use 20` as well due to same constraint
+  - CSS custom property values confirmed in browser: --priority-5 → rgb(29,78,216), --condition-good → rgb(0,121,107)
+---
+
+## [2026-03-12 14:10] - US-007: Cycling nomenclature and copy updates throughout
+Thread:
+Run: 20260312-135645-15469 (iteration 1)
+Run log: /Users/mbaggie/Dev/bike-garage.feat-phase2-3-ui-polish/.ralph/runs/run-20260312-135645-15469-iter-1.log
+Run summary: /Users/mbaggie/Dev/bike-garage.feat-phase2-3-ui-polish/.ralph/runs/run-20260312-135645-15469-iter-1.md
+- Guardrails reviewed: yes
+- No-commit run: false
+- Commit: 3985b9d feat(ui): update copy with cycling nomenclature (US-007)
+- Post-commit status: clean
+- Verification:
+  - Command: npm run lint -> PASS
+  - Command: npm test -> PASS (25/25 server tests)
+  - Command: npm run build --prefix client -> PASS (build output verified)
+- Files changed:
+  - client/index.html
+  - client/src/pages/UploadPage.jsx
+  - client/src/pages/ResultsPage.jsx
+- What was implemented:
+  - UploadPage: H1 "Analyze Your Bike" → "Bike Inspection"; subtitle "Drop your bike photo to get a full component diagnosis" added; button "Analyze Bike" → "Run Diagnosis"
+  - ResultsPage: "Parts Analysis" → "Component Report"; "Overall Condition" label → "Bike Health"; "Pricing" labels → "Parts Pricing"; empty pricing → "No parts found — check your local bike shop" (Claude estimate still shown below); "Mechanic's Call" label added for repair_action in PartDetailPanel and expanded rows
+  - index.html: title → "Bike Garage — Component Diagnosis"
+- **Learnings for future iterations:**
+  - Dev server cannot run on Node.js 18 (Vite requires 20+); use `npm run build --prefix client` for frontend build verification
+  - ralph activity logger script absent from this worktree
+  - "Repair Action" label did not pre-exist; added as "Mechanic's Call" label in detail panel and expanded row
+---
+
+## [2026-03-12 14:20] - US-006: Minimal custom scrollbars and top accent bar
+Thread:
+Run: 20260312-142020-23738 (iteration 1)
+Run log: /Users/mbaggie/Dev/bike-garage.feat-phase2-3-ui-polish/.ralph/runs/run-20260312-142020-23738-iter-1.log
+Run summary: /Users/mbaggie/Dev/bike-garage.feat-phase2-3-ui-polish/.ralph/runs/run-20260312-142020-23738-iter-1.md
+- Guardrails reviewed: yes
+- No-commit run: false
+- Commit: fd83092 feat(ui): add custom scrollbars and top accent bar (prior run)
+- Post-commit status: clean
+- Verification:
+  - Command: `npm run lint` -> PASS
+  - Command: `npm test` -> PASS (25/25)
+  - Browser: accent bar visible at top (blue→teal gradient, 4px, fixed), no layout shift
+- Files changed:
+  - client/src/index.css (scrollbar styles)
+  - client/src/App.jsx (fixed top accent bar)
+- What was implemented:
+  - Custom scrollbars: 5px wide/tall, transparent track, rgba(100,108,255) thumb with 999px border-radius
+  - Top accent bar: 4px fixed div, gradient from --priority-5 to --condition-good, z-index 9999
+- **Learnings for future iterations:**
+  - Vite dev server requires Node 20.19+ or 22.12+; default nvm alias is Node 18, use `nvm use 22` before running dev
+  - Browser script must be saved to a .ts file and run via `npx tsx`, not via heredoc (ESM issues)
+---

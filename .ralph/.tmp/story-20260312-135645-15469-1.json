@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "total": 7,
+  "remaining": 2,
+  "quality_gates": [
+    "npm run lint",
+    "npm test"
+  ],
+  "id": "US-007",
+  "title": "Cycling nomenclature and copy updates throughout"
+}

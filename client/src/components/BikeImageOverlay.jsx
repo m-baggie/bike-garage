@@ -35,6 +35,14 @@ const CONDITION_COLORS = {
   unknown:   'var(--condition-unknown)',
 }
 
+const PRIORITY_COLORS = {
+  1: 'var(--priority-1)',
+  2: 'var(--priority-2)',
+  3: 'var(--priority-3)',
+  4: 'var(--priority-4)',
+  5: 'var(--priority-5)',
+}
+
 export default function BikeImageOverlay({ photoUrl, parts, style, activePartId, onPartClick }) {
   const [hoveredId, setHoveredId] = useState(null)
 
@@ -65,7 +73,8 @@ export default function BikeImageOverlay({ photoUrl, parts, style, activePartId,
         position: 'relative',
         display: 'block',
         overflow: 'hidden',
-        borderRadius: '10px',
+        borderRadius: '12px',
+        boxShadow: '0 8px 32px rgba(0,0,0,0.18)',
         ...style,
       }}
       // Click directly on the container background (not an overlay) → deactivate
@@ -87,7 +96,7 @@ export default function BikeImageOverlay({ photoUrl, parts, style, activePartId,
             width: '100%',
             height: 'auto',
             display: 'block',
-            borderRadius: '10px',
+            borderRadius: '12px',
             border: '1px solid rgba(255,255,255,0.12)',
           }}
         />
@@ -140,6 +149,42 @@ export default function BikeImageOverlay({ photoUrl, parts, style, activePartId,
               onMouseLeave={() => setHoveredId(null)}
               onFocus={() => setHoveredId(part.id)}
               onBlur={() => setHoveredId(null)}
+            />
+          )
+        })}
+
+        {/* Priority pins — always-visible colored dots at each part's bounding box center */}
+        {overlayParts.map((part) => {
+          const { x, y, width, height } = part.boundingBox
+          const cx = x + width / 2
+          const cy = y + height / 2
+          const isActive = activePartId === part.id
+          const isHovered = hoveredId === part.id
+          const priorityColor = PRIORITY_COLORS[part.priority] || 'var(--condition-unknown)'
+          const pinSize = isActive ? 16 : 12
+
+          return (
+            <div
+              key={`pin-${part.id}`}
+              title={part.name}
+              aria-hidden="true"
+              style={{
+                position: 'absolute',
+                left: `${cx * 100}%`,
+                top: `${cy * 100}%`,
+                width: `${pinSize}px`,
+                height: `${pinSize}px`,
+                borderRadius: '50%',
+                background: priorityColor,
+                border: '2px solid white',
+                transform: `translate(-50%, -50%) scale(${isHovered && !isActive ? 1.3 : 1})`,
+                transition: 'transform 0.2s ease, width 0.2s ease, height 0.2s ease, box-shadow 0.2s ease',
+                boxShadow: isActive
+                  ? `0 0 0 3px ${priorityColor}, 0 1px 4px rgba(0,0,0,0.5)`
+                  : '0 1px 4px rgba(0,0,0,0.4)',
+                pointerEvents: 'none',
+                zIndex: 2,
+              }}
             />
           )
         })}
