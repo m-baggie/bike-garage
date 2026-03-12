@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "total": 12,
+  "remaining": 12,
+  "quality_gates": [
+    "npm run lint",
+    "npm test"
+  ],
+  "id": "US-001",
+  "title": "[Setup] Project scaffold \u2014 monorepo structure, scripts, and env config"
+}

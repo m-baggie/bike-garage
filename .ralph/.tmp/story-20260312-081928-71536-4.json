@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "total": 12,
+  "remaining": 9,
+  "quality_gates": [
+    "npm run lint",
+    "npm test"
+  ],
+  "id": "US-004",
+  "title": "[Tree 1 \u2014 Backend] Claude Vision API integration with structured JSON output"
+}

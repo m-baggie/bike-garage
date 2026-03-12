@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "total": 12,
+  "remaining": 6,
+  "quality_gates": [
+    "npm run lint",
+    "npm test"
+  ],
+  "id": "US-007",
+  "title": "[Tree 3 \u2014 Frontend] React + Vite frontend scaffold with routing"
+}

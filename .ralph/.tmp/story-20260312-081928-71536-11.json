@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "total": 12,
+  "remaining": 3,
+  "quality_gates": [
+    "npm run lint",
+    "npm test"
+  ],
+  "id": "US-010",
+  "title": "[Tree 3 \u2014 Frontend] Pricing results display \u2014 integrated into results page"
+}

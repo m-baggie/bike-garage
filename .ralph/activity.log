@@ -1,0 +1,77 @@
+# Activity Log
+
+## Run Summary
+- 2026-03-12 09:24:39 | run=20260312-081928-71536 | iter=13 | mode=build | story=US-012 | duration=507s | status=success
+- 2026-03-12 09:16:08 | run=20260312-081928-71536 | iter=12 | mode=build | story=US-011 | duration=403s | status=success
+- 2026-03-12 09:09:21 | run=20260312-081928-71536 | iter=11 | mode=build | story=US-010 | duration=606s | status=success
+- 2026-03-12 08:59:12 | run=20260312-081928-71536 | iter=10 | mode=build | story=US-009 | duration=356s | status=success
+- 2026-03-12 08:53:13 | run=20260312-081928-71536 | iter=9 | mode=build | story=US-008 | duration=252s | status=success
+- 2026-03-12 08:48:58 | run=20260312-081928-71536 | iter=8 | mode=build | story=US-007 | duration=171s | status=success
+- 2026-03-12 08:46:05 | run=20260312-081928-71536 | iter=7 | mode=build | story=US-007 | duration=265s | status=success
+- 2026-03-12 08:41:36 | run=20260312-081928-71536 | iter=6 | mode=build | story=US-006 | duration=201s | status=success
+- 2026-03-12 08:38:12 | run=20260312-081928-71536 | iter=5 | mode=build | story=US-005 | duration=254s | status=success
+- 2026-03-12 08:33:55 | run=20260312-081928-71536 | iter=4 | mode=build | story=US-004 | duration=254s | status=success
+- 2026-03-12 08:29:38 | run=20260312-081928-71536 | iter=3 | mode=build | story=US-003 | duration=153s | status=success
+- 2026-03-12 08:27:02 | run=20260312-081928-71536 | iter=2 | mode=build | story=US-002 | duration=197s | status=success
+- 2026-03-12 08:23:42 | run=20260312-081928-71536 | iter=1 | mode=build | story=US-001 | duration=253s | status=success
+
+## Events
+
+[2026-03-12 08:19:31] ITERATION 1 start (mode=build story=US-001)
+[2026-03-12 08:22:00] US-001: Scaffolded Vite React client, Express server with dependencies
+[2026-03-12 08:22:30] US-001: Created root package.json with dev/lint/test scripts, server/.env.example, .gitignore, README.md
+[2026-03-12 08:23:00] US-001: Server startup warning for missing ANTHROPIC_API_KEY verified
+[2026-03-12 08:23:30] US-001: Quality gates passed — npm run lint and npm test both PASS
+[2026-03-12 08:23:41] ITERATION 1 end (duration=253s)
+[2026-03-12 08:23:46] ITERATION 2 start (mode=build story=US-002)
+[2026-03-12 08:30:00] US-002: Split app.js from index.js; added /api/health tests and CORS rejection test
+[2026-03-12 08:30:30] US-002: Quality gates passed — npm run lint and npm test both PASS (4/4 tests)
+[2026-03-12 08:31:00] US-002: Committed 962b36b feat(server): add Express health check endpoint with CORS
+[2026-03-12 08:27:02] ITERATION 2 end (duration=197s)
+[2026-03-12 08:27:06] ITERATION 3 start (mode=build story=US-003)
+[2026-03-12 08:29:38] ITERATION 3 end (duration=153s)
+[2026-03-12 08:29:42] ITERATION 4 start (mode=build story=US-004)
+[2026-03-12 08:30:19] US-004: Starting implementation — Claude Vision API integration
+[2026-03-12 08:32:55] US-004: Claude Vision API integrated — Anthropic SDK installed, app.js updated, tests pass (9/9)
+[2026-03-12 08:33:41] US-004: Progress log updated, commit ec13fa5
+[2026-03-12 08:33:55] ITERATION 4 end (duration=254s)
+[2026-03-12 08:34:00] ITERATION 5 start (mode=build story=US-005)
+[2026-03-12 08:34:44] US-005: starting implementation of Performance Bicycle scraper
+[2026-03-12 08:37:33] US-005: scraper implemented in server/src/scrapers/performanceBicycle.js; tests pass (12/12)
+[2026-03-12 08:38:10] US-005: progress log updated; story complete
+[2026-03-12 08:38:12] ITERATION 5 end (duration=254s)
+[2026-03-12 08:38:16] ITERATION 6 start (mode=build story=US-006)
+[2026-03-12 08:41:36] ITERATION 6 end (duration=201s)
+[2026-03-12 08:41:41] ITERATION 7 start (mode=build story=US-007)
+[2026-03-12 08:42:00] US-007: installing react-router-dom, creating UploadPage/ResultsPage stubs, updating App.jsx with BrowserRouter routes
+[2026-03-12 08:43:30] US-007: added global CSS reset to index.css; build and lint pass
+[2026-03-12 08:44:30] US-007: browser-verified all routes (/, /results, /foo → 404) via Playwright
+[2026-03-12 08:45:30] US-007: committed f7a53c8; progress log updated
+[2026-03-12 08:46:04] ITERATION 7 end (duration=265s)
+[2026-03-12 08:46:09] ITERATION 8 start (mode=build story=US-007)
+[2026-03-12 08:48:00] US-007 iter-8: confirmed implementation complete from iter-7; re-verified lint PASS, tests 15/15 PASS, all browser routes confirmed
+[2026-03-12 08:48:30] US-007 iter-8: progress log updated; story complete
+[2026-03-12 08:48:58] ITERATION 8 end (duration=171s)
+[2026-03-12 08:49:03] ITERATION 9 start (mode=build story=US-008)
+[2026-03-12 08:50:21] US-008 iter-9: start — implementing UploadPage with drag-and-drop, preview, axios upload
+[2026-03-12 08:53:04] US-008 iter-9: COMPLETE — UploadPage implemented, lint/tests pass, browser verified, committed 679eabc
+[2026-03-12 08:53:13] ITERATION 9 end (duration=252s)
+[2026-03-12 08:53:18] ITERATION 10 start (mode=build story=US-009)
+[2026-03-12 08:59:12] ITERATION 10 end (duration=356s)
+[2026-03-12 08:59:17] ITERATION 11 start (mode=build story=US-010)
+[2026-03-12 13:00:00] US-010: starting implementation — pricing results display in ResultsPage
+[2026-03-12 13:05:00] US-010: ResultsPage updated with pricing fetch, PricingCell component, spinner animation
+[2026-03-12 13:07:00] US-010: Vite proxy config added (/api → localhost:3001); lint PASS, tests 15/15 PASS
+[2026-03-12 13:10:00] US-010: browser verified — loading spinner ✓, empty results ✓, error state ✓; committed 3e822e4
+[2026-03-12 13:10:30] US-010: progress log updated; story COMPLETE
+[2026-03-12 09:09:21] ITERATION 11 end (duration=606s)
+[2026-03-12 09:09:26] ITERATION 12 start (mode=build story=US-011)
+Thu Mar 12 09:10:55 EDT 2026
+[2026-03-12 09:10] US-011: Start — fixing field name mismatch (photo→image), running browser verification
+[2026-03-12 09:15] US-011: COMPLETE — fixed photo→image field name, browser verified, committed 0dad4a3
+[2026-03-12 09:16:07] ITERATION 12 end (duration=403s)
+[2026-03-12 09:16:12] ITERATION 13 start (mode=build story=US-012)
+[2026-03-12 09:18:06] US-012: Starting - Desktop-first layout polish and basic styling
+[2026-03-12 09:23:59] US-012: Major code changes complete - layout polish, two-column grid, alternating rows, spinners
+[2026-03-12 09:23:59] US-012: lint PASS, tests PASS (15/15), browser verified 1280px + 375px
+[2026-03-12 09:24:39] ITERATION 13 end (duration=507s)

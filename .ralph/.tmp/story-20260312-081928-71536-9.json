@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "total": 12,
+  "remaining": 5,
+  "quality_gates": [
+    "npm run lint",
+    "npm test"
+  ],
+  "id": "US-008",
+  "title": "[Tree 3 \u2014 Frontend] Photo upload form component"
+}

@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "total": 12,
+  "remaining": 1,
+  "quality_gates": [
+    "npm run lint",
+    "npm test"
+  ],
+  "id": "US-012",
+  "title": "[Integration] Desktop-first layout polish and basic styling"
+}

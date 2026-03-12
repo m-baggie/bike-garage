@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "total": 12,
+  "remaining": 10,
+  "quality_gates": [
+    "npm run lint",
+    "npm test"
+  ],
+  "id": "US-003",
+  "title": "[Tree 1 \u2014 Backend] Photo upload endpoint with multer temp storage"
+}

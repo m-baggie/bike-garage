@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "total": 12,
+  "remaining": 2,
+  "quality_gates": [
+    "npm run lint",
+    "npm test"
+  ],
+  "id": "US-011",
+  "title": "[Integration] End-to-end flow \u2014 upload photo, get analysis, show pricing"
+}

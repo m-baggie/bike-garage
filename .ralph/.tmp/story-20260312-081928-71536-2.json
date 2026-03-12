@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "total": 12,
+  "remaining": 11,
+  "quality_gates": [
+    "npm run lint",
+    "npm test"
+  ],
+  "id": "US-002",
+  "title": "[Tree 1 \u2014 Backend] Express server with health check and CORS"
+}
