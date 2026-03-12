@@ -3,16 +3,18 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
 // ── Condition badge ──────────────────────────────────────────────────────────
-const CONDITION_COLORS = {
-  excellent: { bg: '#16a34a', text: '#fff' },
-  good:      { bg: '#2563eb', text: '#fff' },
-  fair:      { bg: '#ca8a04', text: '#fff' },
-  poor:      { bg: '#dc2626', text: '#fff' },
+const CONDITION_CONFIG = {
+  excellent: { bg: 'var(--condition-excellent)', icon: '★' },
+  good:      { bg: 'var(--condition-good)',      icon: '✓' },
+  fair:      { bg: 'var(--condition-fair)',      icon: '●' },
+  poor:      { bg: 'var(--condition-poor)',      icon: '✕' },
+  unknown:   { bg: 'var(--condition-unknown)',   icon: '?' },
 }
 
 function ConditionBadge({ value }) {
-  const key = (value || '').toLowerCase()
-  const colors = CONDITION_COLORS[key] || { bg: '#6b7280', text: '#fff' }
+  const key = (value || 'unknown').toLowerCase()
+  const { bg, icon } = CONDITION_CONFIG[key] || CONDITION_CONFIG.unknown
+  const label = key.charAt(0).toUpperCase() + key.slice(1)
   return (
     <span style={{
       display: 'inline-block',
@@ -20,26 +22,25 @@ function ConditionBadge({ value }) {
       borderRadius: '9999px',
       fontSize: '0.78rem',
       fontWeight: 600,
-      background: colors.bg,
-      color: colors.text,
-      textTransform: 'capitalize',
+      background: bg,
+      color: 'var(--badge-text)',
     }}>
-      {value || 'unknown'}
+      {icon} {label}
     </span>
   )
 }
 
 // ── Priority badge ───────────────────────────────────────────────────────────
 const PRIORITY_MAP = {
-  1: { label: 'Immediate', bg: '#dc2626', text: '#fff' },
-  2: { label: 'Soon',      bg: '#ea580c', text: '#fff' },
-  3: { label: 'Monitor',   bg: '#ca8a04', text: '#fff' },
-  4: { label: 'OK',        bg: '#2563eb', text: '#fff' },
-  5: { label: 'New',       bg: '#16a34a', text: '#fff' },
+  1: { icon: '⚠', label: 'Immediate', bg: 'var(--priority-1)' },
+  2: { icon: '↑', label: 'Soon',      bg: 'var(--priority-2)' },
+  3: { icon: '●', label: 'Monitor',   bg: 'var(--priority-3)' },
+  4: { icon: '✓', label: 'OK',        bg: 'var(--priority-4)' },
+  5: { icon: '★', label: 'New',       bg: 'var(--priority-5)' },
 }
 
 function PriorityBadge({ value }) {
-  const p = PRIORITY_MAP[value] || { label: String(value), bg: '#6b7280', text: '#fff' }
+  const p = PRIORITY_MAP[value] || { icon: '', label: String(value), bg: 'var(--condition-unknown)' }
   return (
     <span style={{
       display: 'inline-block',
@@ -48,9 +49,9 @@ function PriorityBadge({ value }) {
       fontSize: '0.78rem',
       fontWeight: 600,
       background: p.bg,
-      color: p.text,
+      color: 'var(--badge-text)',
     }}>
-      {p.label}
+      {p.icon} {p.label}
     </span>
   )
 }

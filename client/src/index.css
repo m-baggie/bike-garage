@@ -22,6 +22,21 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+
+  /* Colorblind-safe badge color tokens */
+  --condition-excellent: #1D70B8;
+  --condition-good: #00796B;
+  --condition-fair: #92400E;
+  --condition-poor: #9B1D6A;
+  --condition-unknown: #4B5563;
+
+  --priority-1: #B91C1C;
+  --priority-2: #C2410C;
+  --priority-3: #92400E;
+  --priority-4: #065F46;
+  --priority-5: #1D4ED8;
+
+  --badge-text: #FFFFFF;
 }
 
 a {

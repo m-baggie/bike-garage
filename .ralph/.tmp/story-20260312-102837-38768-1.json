@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "total": 4,
+  "remaining": 4,
+  "quality_gates": [
+    "npm run lint",
+    "npm test"
+  ],
+  "id": "US-001",
+  "title": "Define colorblind-safe CSS color tokens for badges"
+}

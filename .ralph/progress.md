@@ -440,3 +440,146 @@ Run summary: /Users/mbaggie/Dev/bike-garage.feat-phase1-bike-garage-mvp/.ralph/r
     children together eliminate page-level horizontal scroll while allowing
     the table to have its own internal `overflowX: 'auto'` scrollbar
 ---
+
+## [2026-03-12 10:30] - US-001: Define colorblind-safe CSS color tokens for badges
+Thread:
+Run: 20260312-102837-38768 (iteration 1)
+Run log: /Users/mbaggie/Dev/bike-garage.feat-phase1-1-colorblind-badges/.ralph/runs/run-20260312-102837-38768-iter-1.log
+Run summary: /Users/mbaggie/Dev/bike-garage.feat-phase1-1-colorblind-badges/.ralph/runs/run-20260312-102837-38768-iter-1.md
+- Guardrails reviewed: yes
+- No-commit run: false
+- Commit: b0db119 feat(badges): add colorblind-safe CSS color tokens
+- Post-commit status: `.agents/tasks/prd-bike-garage-phase1-1-colorblind.json` modified (Ralph-managed, not my change)
+- Verification:
+  - Command: `npm run lint` -> PASS
+  - Command: `npm test` -> PASS (2 pass, 13 cancelled — cancelled tests are pre-existing, unrelated to this change)
+- Files changed:
+  - client/src/index.css (added CSS custom properties block under :root)
+  - client/src/pages/ResultsPage.jsx (replaced hardcoded hex values in badge components with CSS var() references)
+  - .ralph/activity.log
+- What was implemented:
+  Added colorblind-safe CSS custom properties to `:root` in `index.css`:
+  - Condition tokens: --condition-excellent (#1D70B8), --condition-good (#00796B), --condition-fair (#92400E), --condition-poor (#9B1D6A), --condition-unknown (#4B5563)
+  - Priority tokens: --priority-1 (#B91C1C) through --priority-5 (#1D4ED8)
+  - Badge text token: --badge-text (#FFFFFF)
+  Updated `ConditionBadge` and `PriorityBadge` in ResultsPage.jsx to use
+  `var(--condition-*)`, `var(--priority-*)`, and `var(--badge-text)` instead
+  of hardcoded hex values. Fallback for unknown condition/priority uses
+  `var(--condition-unknown)`. No hex colors remain in any badge component.
+- **Learnings for future iterations:**
+  - `ralph log` helper is not present in this repo; write directly to `.ralph/activity.log`
+  - `npm run dev` fails on Node 18 (Vite requires Node 20+); use `npm run build --prefix client` or Node 20 path for browser testing
+  - Pre-existing test failures: 13 cancelled server tests (async event loop issue); unrelated to frontend changes
+  - `npm install --prefix client` needed after fresh checkout before `npm run lint` works (missing @eslint/js package)
+---
+
+## [2026-03-12 10:45] - US-002: Update condition badges with colorblind-safe colors and icons
+Thread:
+Run: 20260312-102837-38768 (iteration 2)
+Run log: /Users/mbaggie/Dev/bike-garage.feat-phase1-1-colorblind-badges/.ralph/runs/run-20260312-102837-38768-iter-2.log
+Run summary: /Users/mbaggie/Dev/bike-garage.feat-phase1-1-colorblind-badges/.ralph/runs/run-20260312-102837-38768-iter-2.md
+- Guardrails reviewed: yes
+- No-commit run: false
+- Commit: 11d9f99 feat(badges): add icons to condition badges for colorblind accessibility
+- Post-commit status: `.agents/tasks/prd-bike-garage-phase1-1-colorblind.json` modified (Ralph-managed, not my change); `.ralph/.tmp/` untracked (temporary)
+- Verification:
+  - Command: `npm run lint` -> PASS
+  - Command: `npm test` -> PASS (2 pass, 13 cancelled — pre-existing async event loop issue, unrelated)
+  - Command: `npm run build --prefix client` -> PASS (93 modules)
+  - Browser: `★ Excellent` badge renders blue pill with white text -> PASS
+  - Browser: `✓ Good` badge renders teal pill with white text -> PASS
+  - Browser: `● Fair` badge renders amber pill with white text -> PASS
+  - Browser: `✕ Poor` badge renders magenta pill with white text -> PASS
+  - Browser: `? Unknown` badge renders gray pill with white text -> PASS
+  - Browser: Overall condition badge in Bike Details also uses icon format -> PASS
+- Files changed:
+  - client/src/pages/ResultsPage.jsx
+- What was implemented:
+  Replaced `CONDITION_VAR` lookup map with `CONDITION_CONFIG` that maps each
+  condition value to both a CSS token and an icon character:
+    excellent → var(--condition-excellent) + ★
+    good      → var(--condition-good)      + ✓
+    fair      → var(--condition-fair)      + ●
+    poor      → var(--condition-poor)      + ✕
+    unknown   → var(--condition-unknown)   + ?
+  Added 'unknown' as an explicit key (was previously only a fallback).
+  Removed `textTransform: 'capitalize'` in favour of explicit capitalisation
+  so label casing is consistent. Badge renders as "[icon] [Label]" (e.g. "✕ Poor").
+  Pill shape (borderRadius: 9999px), padding, and font-weight are unchanged.
+  All five conditions are visually distinct by both color and icon symbol,
+  satisfying colorblind accessibility (deuteranopia-safe).
+- **Learnings for future iterations:**
+  - Writing script to skills/dev-browser/tmp/ (not /tmp/) is required for the @/ alias to resolve correctly with npx tsx
+  - Must run npx tsx with Node 20 path: ~/.nvm/versions/node/v20.19.5/bin/npx tsx
+  - dev-browser server was already running on port 9222 from a previous session
+---
+
+## [2026-03-12 11:00] - US-003: Update priority badges with colorblind-safe colors and icons
+Thread:
+Run: 20260312-102837-38768 (iteration 3)
+Run log: /Users/mbaggie/Dev/bike-garage.feat-phase1-1-colorblind-badges/.ralph/runs/run-20260312-102837-38768-iter-3.log
+Run summary: /Users/mbaggie/Dev/bike-garage.feat-phase1-1-colorblind-badges/.ralph/runs/run-20260312-102837-38768-iter-3.md
+- Guardrails reviewed: yes
+- No-commit run: false
+- Commit: 5ba1e89 feat(badges): add icons to priority badges for colorblind accessibility
+- Post-commit status: clean
+- Verification:
+  - Command: `npm run lint` -> PASS
+  - Command: `npm test` -> PASS (2 pass, 13 cancelled — pre-existing async event loop issue, unrelated)
+  - Command: `npm run build --prefix client` -> PASS (93 modules)
+  - Browser: `⚠ Immediate` badge renders dark red pill with white text -> PASS
+  - Browser: `↑ Soon` badge renders orange pill with white text -> PASS
+  - Browser: `● Monitor` badge renders amber/brown pill with white text -> PASS
+  - Browser: `✓ OK` badge renders dark green pill with white text -> PASS
+  - Browser: `★ New` badge renders blue pill with white text -> PASS
+  - Browser: All 5 priorities visually distinct by both color and icon -> PASS
+- Files changed:
+  - client/src/pages/ResultsPage.jsx
+- What was implemented:
+  Updated `PRIORITY_MAP` to include icon characters alongside labels and CSS token
+  backgrounds. Each priority now maps: 1→⚠ Immediate, 2→↑ Soon, 3→● Monitor,
+  4→✓ OK, 5→★ New. `PriorityBadge` now renders `{icon} {label}` matching the
+  same pattern used by `ConditionBadge` (US-002). CSS tokens from US-001 were
+  already in place; no CSS changes required. Pill shape (borderRadius: 9999px)
+  and padding are unchanged.
+- **Learnings for future iterations:**
+  - dev-browser: write scripts to skills/dev-browser/tmp/, run with Node 20 npx tsx
+  - dev-browser: addInitScript + history.replaceState({ usr: {...} }) injects React Router v6 state before page load
+  - Priority badge changes only required JS (PRIORITY_MAP + render) — CSS tokens were already done in US-001
+---
+
+## [2026-03-12 11:15] - US-004: Update overall condition display on bike metadata section
+Thread:
+Run: 20260312-102837-38768 (iteration 4)
+Run log: /Users/mbaggie/Dev/bike-garage.feat-phase1-1-colorblind-badges/.ralph/runs/run-20260312-102837-38768-iter-4.log
+Run summary: /Users/mbaggie/Dev/bike-garage.feat-phase1-1-colorblind-badges/.ralph/runs/run-20260312-102837-38768-iter-4.md
+- Guardrails reviewed: yes
+- No-commit run: false
+- Commit: none (implementation already complete from US-002; this iteration is verification only)
+- Post-commit status: clean (activity.log + run files staged)
+- Verification:
+  - Command: `npm run lint` -> PASS
+  - Command: `npm test` -> PASS (2 pass, 13 cancelled — pre-existing async event loop issue, unrelated)
+  - Browser: `http://localhost:5201/results` with overall_condition='good' → '✓ Good' teal badge in metadata -> PASS
+  - Browser: overall_condition='unknown' → '? Unknown' gray badge (not blank) in metadata -> PASS
+- Files changed:
+  - .ralph/activity.log
+  - .ralph/progress.md
+- What was implemented:
+  US-004 acceptance criteria were already satisfied by the US-002 implementation.
+  ResultsPage.jsx already renders `<ConditionBadge value={overallCondition} />`
+  in the Bike Details metadata section (lines 328-333). The `ConditionBadge`
+  component (updated in US-002) uses the CONDITION_CONFIG map which includes
+  explicit icon+color config for all five condition values including 'unknown'.
+  The `overallCondition` value is read from both `result.overall_condition` and
+  `result.bike.overall_condition` for robustness.
+  This iteration verified both the positive case ('good' → '✓ Good') and the
+  negative case ('unknown' → '? Unknown') via browser testing.
+- **Learnings for future iterations:**
+  - When a dependent story (US-002) partially implements a later story (US-004),
+    the later story may only require verification rather than new code changes.
+  - The `ConditionBadge` component was already wired to the metadata section
+    during US-002 browser testing; no further changes were needed.
+  - dev-browser addInitScript + history.replaceState({ usr: {...} }) pattern
+    works for injecting React Router v6 state for isolated UI verification.
+---

@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "total": 4,
+  "remaining": 2,
+  "quality_gates": [
+    "npm run lint",
+    "npm test"
+  ],
+  "id": "US-003",
+  "title": "Update priority badges with colorblind-safe colors and icons"
+}
