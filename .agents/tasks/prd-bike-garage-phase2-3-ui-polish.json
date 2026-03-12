@@ -1,0 +1,202 @@
+{
+  "version": 1,
+  "project": "Bike Garage - Phase 2.3 UI Polish and Cycling Identity",
+  "overview": "A visual polish pass to make the app sleeker, more cohesive, and cycling-themed. Fixes dark text contrast, gives the bike photo and pin overlay more visual prominence, introduces a compact collapsible parts list, improves the price summary card styling, adds minimal scrollbars, and introduces cycling-themed loading animations and nomenclature throughout.",
+  "goals": [
+    "Fix text contrast — replace #213547 dark text with a color that works on dark backgrounds",
+    "Make the bike photo + pin overlay the hero element of the results page",
+    "Introduce a compact, collapsible parts list to reduce visual overwhelm",
+    "Make the maintenance summary/price card more visually striking",
+    "Add minimal custom scrollbars throughout",
+    "Apply cycling-themed nomenclature and a cohesive visual identity",
+    "Add a cycling-themed loading animation for the analysis and pricing wait states"
+  ],
+  "nonGoals": [
+    "No changes to backend, API, or data model",
+    "No new features or functionality — polish only",
+    "No dark mode implementation",
+    "No animation library installation — use CSS animations only unless a GIF is used for the loader"
+  ],
+  "successMetrics": [
+    "Text is legible on all backgrounds at a glance",
+    "Bike photo is visually the dominant element on the results page",
+    "Parts list is scannable in compact mode and expandable for detail",
+    "Loading state shows a cycling animation instead of a generic spinner",
+    "Page feels cohesive and purpose-built for cyclists, not a generic web app"
+  ],
+  "openQuestions": [
+    "Should the cycling loader be a CSS animation (spinning wheel/gear) or an embedded GIF?",
+    "Should cycling nomenclature extend to the upload page CTA (e.g. 'Start Your Inspection' instead of 'Analyze Bike')?"
+  ],
+  "stack": {
+    "framework": "React (Vite) frontend",
+    "hosting": "localhost",
+    "database": "none",
+    "auth": "none",
+    "notes": "CSS-only animations preferred. No new npm packages unless absolutely necessary."
+  },
+  "routes": [
+    { "path": "/", "name": "Upload / Inspection Start", "purpose": "Entry point — gets cycling-themed copy and loader" },
+    { "path": "/results", "name": "Bike Inspection Report", "purpose": "Primary page for all visual polish work" }
+  ],
+  "uiNotes": [
+    "CONTRAST FIX: Replace all instances of color #213547 with #1a1a2e or a similarly deep navy that reads clearly on both white and light-gray backgrounds. Target: all body text, labels, table content.",
+    "PHOTO HERO: On desktop, increase the left column (photo + overlays) to 55% width (from ~50%). Add a subtle drop shadow and rounded corners to the photo container. The photo should feel like the centerpiece of the page.",
+    "PIN MARKERS: Ensure part pins on the photo are always visible (small colored dot at bounding box center) with a subtle pulse animation on hover. Pin color maps to priority level.",
+    "COMPACT PARTS LIST: Replace the expanded table rows with a compact single-line row by default showing: part name, condition badge, priority badge, repair action badge only. Each row has a chevron toggle to expand full detail (condition notes, repair notes, pricing). All rows collapsed by default. A 'Expand All / Collapse All' toggle at the section header.",
+    "PRICE SUMMARY CARD: Give the maintenance summary card a gradient background (subtle, e.g. deep navy to dark teal), white text, larger stat numbers (2rem), and a bottom border accent in the brand color. Add a bicycle icon (Unicode 🚲 or inline SVG) next to the title.",
+    "SCROLLBARS: Apply custom minimal scrollbars globally — 4px width, rounded, color #646cff on hover, transparent track. Use ::-webkit-scrollbar CSS.",
+    "CYCLING NOMENCLATURE: Rename UI labels to cycling-appropriate terms: 'Upload Photo' → 'Start Inspection', 'Analyze Bike' → 'Run Diagnosis', 'Parts Analysis' → 'Component Report', 'Overall Condition' → 'Bike Health', 'Repair Action' → 'Mechanic Recommendation', 'No results found' → 'No parts found in the peloton' (playful), loading text → 'Spinning up your diagnosis…'",
+    "CYCLING LOADER: Replace the generic spinner on the upload page and reanalysis overlay with a cycling-themed CSS animation. Options: a spinning bicycle wheel (SVG with rotating spokes), a gear spinning, or a small cyclist SVG animation. Must be CSS-only (keyframes). Show 'Spinning up your diagnosis…' below the animation.",
+    "TYPOGRAPHY: Increase base font size to 15px. Section headers use a slightly bolder weight (600). Part names in the compact list use font-weight 500.",
+    "COHESION: Add a thin top accent bar to the page (4px, gradient from --priority-5 blue to --condition-good teal) to give the app a branded feel. App title in the nav/header should read 'Bike Garage' in a bold, clean typeface."
+  ],
+  "dataModel": [],
+  "importFormat": {
+    "description": "Not applicable — frontend-only polish pass"
+  },
+  "rules": [
+    "No hardcoded colors — all colors must reference existing CSS custom properties or new tokens added to :root in index.css",
+    "Compact row must show all three badges (condition, priority, repair action) on one line without wrapping at 1280px",
+    "Expanded row detail must show everything the current full row shows — no information loss",
+    "Cycling loader animation must loop infinitely and be dismissible (replaced by content on load)",
+    "All renamed labels must remain functionally identical — rename only, no logic changes",
+    "Scrollbar styling uses ::-webkit-scrollbar only — no JS scrollbar libraries"
+  ],
+  "qualityGates": [
+    "npm run lint",
+    "npm test"
+  ],
+  "stories": [
+    {
+      "id": "US-001",
+      "title": "Fix text contrast — replace dark navy text color with legible alternative",
+      "status": "open",
+      "dependsOn": [],
+      "description": "As a user, I want all body text to be clearly legible against page backgrounds so the app is comfortable to read.",
+      "acceptanceCriteria": [
+        "Replace all instances of color #213547 in CSS and inline styles with #1e293b (slate-800) which reads clearly on white and light-gray backgrounds",
+        "Add --text-primary: #1e293b and --text-secondary: #475569 CSS tokens to :root in index.css",
+        "All body text, table content, labels, and headings reference --text-primary or --text-secondary",
+        "No raw #213547 hex remains anywhere in the codebase",
+        "npm run lint passes",
+        "Example: parts table rows show dark legible text on white background",
+        "Negative case: no text appears as near-invisible dark-on-dark anywhere on the results page"
+      ]
+    },
+    {
+      "id": "US-002",
+      "title": "Cycling-themed loading animation — replace generic spinner",
+      "status": "open",
+      "dependsOn": ["US-001"],
+      "description": "As a user, I want a cycling-themed loading animation during analysis so the app feels purpose-built for cyclists.",
+      "acceptanceCriteria": [
+        "Create a CyclingLoader component in client/src/components/CyclingLoader.jsx",
+        "Animation is a CSS-only spinning bicycle wheel: an SVG circle with 8 spoke lines, rotated via @keyframes spin at 1.2s linear infinite",
+        "Wheel SVG is 64x64px, stroke color uses --priority-5 blue (#1D4ED8)",
+        "Below the wheel, text reads 'Spinning up your diagnosis…' in --text-secondary color",
+        "CyclingLoader replaces the existing spinner on the UploadPage during analysis (the 'Analyzing…' button state)",
+        "CyclingLoader also replaces the loading overlay on ResultsPage during reanalysis",
+        "Component accepts an optional `message` prop to override the default text",
+        "npm run lint passes",
+        "Example: click 'Run Diagnosis' → wheel spins with 'Spinning up your diagnosis…' below it",
+        "Negative case: loader disappears completely and is replaced by results once analysis completes — no ghost spinner"
+      ]
+    },
+    {
+      "id": "US-003",
+      "title": "Enlarge bike photo hero and add always-visible priority pins",
+      "status": "open",
+      "dependsOn": ["US-001"],
+      "description": "As a user, I want the bike photo to be the dominant visual element and part pins to always be visible so I immediately understand what to interact with.",
+      "acceptanceCriteria": [
+        "On desktop (≥1024px), left column (photo + overlays) width increased to 55% of the two-column layout",
+        "Photo container gets box-shadow: 0 8px 32px rgba(0,0,0,0.18) and border-radius: 12px",
+        "Each part with a boundingBox gets a small circular pin marker at its center (bounding box cx, cy): 12px diameter, filled with the part's priority color, white border 2px, always visible (not just on hover)",
+        "Pin has a subtle pulse animation on hover: scale(1.3) over 0.2s",
+        "Pin has a tooltip (HTML title attribute) showing the part name",
+        "Active part pin scales to 16px and shows a ring around it",
+        "npm run lint passes",
+        "Example: results page loads → 8 small colored dots visible on bike photo without any interaction",
+        "Negative case: parts with null boundingBox render no pin — no dot at 0,0"
+      ]
+    },
+    {
+      "id": "US-004",
+      "title": "Compact collapsible parts list with expand-all toggle",
+      "status": "open",
+      "dependsOn": ["US-001"],
+      "description": "As a user, I want a compact default view of the parts list with the ability to expand individual parts or all at once so I can scan quickly without being overwhelmed.",
+      "acceptanceCriteria": [
+        "Each part row in all urgency sections defaults to a single compact line: part name (font-weight 500) + condition badge + priority badge + repair action badge + a chevron (›) expand button, all on one line",
+        "Compact row fits on one line without wrapping at 1280px desktop width",
+        "Clicking the chevron or anywhere on the row expands it to show: condition notes, repair notes (italic), pricing results or estimated cost range",
+        "Expanded state shows a ‹ collapse chevron",
+        "Each urgency section header (Action Required / Monitor / Good Shape) has an 'Expand All' link on the right — clicking it expands all rows in that section; changes to 'Collapse All' when all are expanded",
+        "Sections themselves remain collapsible (existing behavior) — the expand/collapse all only affects rows within an open section",
+        "No information is removed — all detail from current view is still accessible after expanding",
+        "npm run lint passes",
+        "Example: 10-part results page → all rows compact on load → click 'Expand All' on Action Required → 2 rows expand showing full detail",
+        "Negative case: part with no condition notes or repair notes — expanded state still renders cleanly with just pricing, no empty placeholder text"
+      ]
+    },
+    {
+      "id": "US-005",
+      "title": "Polish maintenance summary card with gradient and cycling icon",
+      "status": "open",
+      "dependsOn": ["US-001"],
+      "description": "As a user, I want the maintenance summary card to stand out visually so it draws my eye to the most important information first.",
+      "acceptanceCriteria": [
+        "Summary card background changed to a gradient: linear-gradient(135deg, #0f172a 0%, #065F46 100%)",
+        "All text in the card changed to white (#ffffff)",
+        "Stat numbers (counts and cost range) increased to font-size: 1.75rem, font-weight: 700",
+        "Stat labels below numbers in font-size: 0.8rem, opacity: 0.8",
+        "Card title changed to '🚲 Bike Health Summary' with the bicycle emoji",
+        "Card gets border-radius: 16px, padding: 24px, and a subtle inner glow: box-shadow: inset 0 1px 0 rgba(255,255,255,0.1)",
+        "On mobile (<768px) stats remain in 2x2 grid with consistent sizing",
+        "npm run lint passes",
+        "Example: results page loads → dark gradient card with white '🚲 Bike Health Summary' heading and large stat numbers is immediately eye-catching",
+        "Negative case: card with 0 urgent parts still renders correctly — '⚠ 0' stat is hidden per existing rule, card doesn't collapse or break"
+      ]
+    },
+    {
+      "id": "US-006",
+      "title": "Minimal custom scrollbars and top accent bar",
+      "status": "open",
+      "dependsOn": ["US-001"],
+      "description": "As a user, I want the scrollbars to be minimal and unobtrusive and the page to have a branded top accent so the app feels polished and cohesive.",
+      "acceptanceCriteria": [
+        "Add global ::-webkit-scrollbar styles to index.css: width 5px, height 5px",
+        "::-webkit-scrollbar-track background transparent",
+        "::-webkit-scrollbar-thumb background rgba(100, 108, 255, 0.4), border-radius 999px",
+        "::-webkit-scrollbar-thumb:hover background rgba(100, 108, 255, 0.8)",
+        "Add a 4px tall top accent bar to the app layout (above the main content, full width): background linear-gradient(90deg, var(--priority-5) 0%, var(--condition-good) 100%)",
+        "Accent bar is fixed/sticky at the very top of the viewport, z-index above all content",
+        "npm run lint passes",
+        "Example: scroll the results page → thin purple-to-teal scrollbar thumb visible on the right, no default OS scrollbar styling",
+        "Negative case: accent bar does not shift page content down by more than 4px — no layout shift on the upload or results page"
+      ]
+    },
+    {
+      "id": "US-007",
+      "title": "Cycling nomenclature and copy updates throughout",
+      "status": "open",
+      "dependsOn": ["US-002", "US-004", "US-005"],
+      "description": "As a user, I want the app to speak the language of cycling so it feels purpose-built rather than generic.",
+      "acceptanceCriteria": [
+        "UploadPage CTA button text changed from 'Analyze Bike' to 'Run Diagnosis'",
+        "UploadPage heading/subheading updated to use cycling framing: e.g. 'Bike Inspection' as page title, 'Drop your bike photo to get a full component diagnosis' as subtitle",
+        "ResultsPage section title changed from 'Parts Analysis' to 'Component Report'",
+        "Overall condition label changed from 'Overall Condition' to 'Bike Health'",
+        "Repair action column/badge label: 'Repair Action' → 'Mechanic's Call'",
+        "Pricing column header: 'Pricing' → 'Parts Pricing'",
+        "Empty pricing message: 'No results found on Performance Bicycle' → 'No parts found — check your local bike shop'",
+        "Loading text on CyclingLoader default message: 'Spinning up your diagnosis…' (already set in US-002)",
+        "Page document title (in index.html or via useEffect): 'Bike Garage — Component Diagnosis'",
+        "npm run lint passes",
+        "Example: upload page shows 'Run Diagnosis' button and 'Bike Inspection' heading",
+        "Negative case: no functional behavior changes — renaming labels only, all API calls and logic unchanged"
+      ]
+    }
+  ]
+}
