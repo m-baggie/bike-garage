@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "total": 6,
+  "remaining": 6,
+  "quality_gates": [
+    "npm run lint",
+    "npm test"
+  ],
+  "id": "US-001",
+  "title": "Update Claude Vision prompt to return bounding box coordinates per part"
+}

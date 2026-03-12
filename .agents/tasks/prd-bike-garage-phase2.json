@@ -9,14 +9,14 @@
     "Refine responsive design for both desktop and mobile web"
   ],
   "nonGoals": [
-    "No data persistence — all state is still in-memory/session only",
+    "No data persistence \u2014 all state is still in-memory/session only",
     "No user accounts or authentication (Phase 3)",
     "No saving of analyses (Phase 3)",
     "No manual part addition or editing by the user"
   ],
   "successMetrics": [
     "Clicking a part on the bike image highlights that area with a visible overlay",
-    "Part detail panel appears within 100ms of click (no async call required — data is already loaded)",
+    "Part detail panel appears within 100ms of click (no async call required \u2014 data is already loaded)",
     "Reanalysis button triggers a new Claude Vision call and replaces results in-place",
     "Layout is usable and unbroken on a 375px mobile viewport"
   ],
@@ -29,11 +29,19 @@
     "hosting": "localhost",
     "database": "none",
     "auth": "none",
-    "newDependencies": "None expected — Phase 2 is primarily frontend interaction work"
+    "newDependencies": "None expected \u2014 Phase 2 is primarily frontend interaction work"
   },
   "routes": [
-    { "path": "/", "name": "Home / Upload", "purpose": "Photo upload (unchanged from Phase 1)" },
-    { "path": "/results", "name": "Results (interactive)", "purpose": "Bike photo with clickable part overlays, detail panel, reanalysis button" }
+    {
+      "path": "/",
+      "name": "Home / Upload",
+      "purpose": "Photo upload (unchanged from Phase 1)"
+    },
+    {
+      "path": "/results",
+      "name": "Results (interactive)",
+      "purpose": "Bike photo with clickable part overlays, detail panel, reanalysis button"
+    }
   ],
   "uiNotes": [
     "Results page left column: bike photo displayed with SVG or div overlays for each part bounding region",
@@ -43,25 +51,33 @@
     "Active part is also highlighted in the parts table on the right",
     "Reanalysis button: positioned above the photo, triggers POST /api/analyze with same image data",
     "Mobile layout: photo on top full-width, part detail panel below photo, parts table below that",
-    "Zoom effect: CSS transform scale on a clipped container — should not reflow other layout elements"
+    "Zoom effect: CSS transform scale on a clipped container \u2014 should not reflow other layout elements"
   ],
   "dataModel": [
     {
       "entity": "Part (extended from Phase 1)",
       "fields": [
-        "id", "name", "component_group", "brand", "model",
-        "condition", "condition_notes", "priority", "priority_label",
-        "search_query", "visible_in_image",
+        "id",
+        "name",
+        "component_group",
+        "brand",
+        "model",
+        "condition",
+        "condition_notes",
+        "priority",
+        "priority_label",
+        "search_query",
+        "visible_in_image",
         "boundingBox: { x: 0-1, y: 0-1, width: 0-1, height: 0-1 } (normalized, relative to image)"
       ]
     }
   ],
   "rules": [
-    "Claude Vision prompt must be updated to include bounding box coordinates for each visible part (normalized 0.0–1.0 relative to image dimensions)",
+    "Claude Vision prompt must be updated to include bounding box coordinates for each visible part (normalized 0.0\u20131.0 relative to image dimensions)",
     "Parts with visible_in_image=false should not render a clickable overlay region",
-    "Only one part can be active/highlighted at a time — clicking another part deselects the previous one",
+    "Only one part can be active/highlighted at a time \u2014 clicking another part deselects the previous one",
     "Clicking outside all part regions deselects the active part",
-    "Reanalysis replaces all analysis and pricing data in state — there is no comparison or history view",
+    "Reanalysis replaces all analysis and pricing data in state \u2014 there is no comparison or history view",
     "Zoom effect must be reversible (clicking again or clicking outside deactivates zoom)"
   ],
   "qualityGates": [
@@ -72,25 +88,30 @@
     {
       "id": "US-001",
       "title": "Update Claude Vision prompt to return bounding box coordinates per part",
-      "status": "open",
+      "status": "done",
       "dependsOn": [],
       "description": "As the backend, I want Claude Vision to return normalized bounding box coordinates for each identified part so the frontend can render clickable overlays on the photo.",
       "acceptanceCriteria": [
-        "Claude prompt updated to request a boundingBox field for each part: { x, y, width, height } normalized 0.0–1.0 relative to image dimensions",
+        "Claude prompt updated to request a boundingBox field for each part: { x, y, width, height } normalized 0.0\u20131.0 relative to image dimensions",
         "Prompt instructs: x and y are the top-left corner of the bounding region, width and height are the region dimensions",
         "Schema validation updated to accept optional boundingBox on each part (not all parts may have a detectable region)",
         "Parts with no detectable region have boundingBox: null",
         "POST /api/analyze response now includes boundingBox in each part object",
         "Existing npm tests updated to reflect new schema shape",
-        "Example: Rear Derailleur part → boundingBox: { x: 0.6, y: 0.55, width: 0.12, height: 0.1 }",
-        "Negative case: part with visible_in_image=false → boundingBox is null"
-      ]
+        "Example: Rear Derailleur part \u2192 boundingBox: { x: 0.6, y: 0.55, width: 0.12, height: 0.1 }",
+        "Negative case: part with visible_in_image=false \u2192 boundingBox is null"
+      ],
+      "startedAt": "2026-03-12T14:45:36.900817+00:00",
+      "completedAt": "2026-03-12T14:49:25.094853+00:00",
+      "updatedAt": "2026-03-12T14:49:25.094466+00:00"
     },
     {
       "id": "US-002",
       "title": "Render clickable part overlay regions on bike photo",
-      "status": "open",
-      "dependsOn": ["US-001"],
+      "status": "done",
+      "dependsOn": [
+        "US-001"
+      ],
       "description": "As a user, I want to see subtle clickable regions on the bike photo corresponding to identified parts so I know where to click for details.",
       "acceptanceCriteria": [
         "BikeImageOverlay component renders the bike photo with absolutely-positioned div or SVG overlay regions for each part that has a non-null boundingBox",
@@ -100,84 +121,108 @@
         "Regions with visible_in_image=false or null boundingBox are not rendered",
         "Image and overlays scale correctly when the browser window is resized",
         "npm run lint passes",
-        "Example: 8-part analysis with 6 parts having bounding boxes → 6 overlay regions visible on photo",
-        "Negative case: analysis with 0 bounding boxes → photo renders normally with no overlays, no errors"
-      ]
+        "Example: 8-part analysis with 6 parts having bounding boxes \u2192 6 overlay regions visible on photo",
+        "Negative case: analysis with 0 bounding boxes \u2192 photo renders normally with no overlays, no errors"
+      ],
+      "startedAt": "2026-03-12T14:49:27.915335+00:00",
+      "completedAt": "2026-03-12T14:57:57.628411+00:00",
+      "updatedAt": "2026-03-12T14:57:57.627883+00:00"
     },
     {
       "id": "US-003",
       "title": "Click a part region to highlight, zoom, and show detail panel",
-      "status": "open",
-      "dependsOn": ["US-002"],
+      "status": "done",
+      "dependsOn": [
+        "US-002"
+      ],
       "description": "As a user, I want to click a part region on the photo to zoom into that area and see detailed information for that part so I can quickly understand its condition and priority.",
       "acceptanceCriteria": [
         "Clicking a part overlay region sets that part as 'active' in component state",
         "Active region is highlighted with a more prominent overlay (colored border matching condition color)",
         "Photo container applies a CSS transform to zoom and pan to center the active part's bounding box region (scale ~2x, clipped to container)",
-        "Zoom/pan uses CSS transition for a smooth animation (200–300ms ease)",
+        "Zoom/pan uses CSS transition for a smooth animation (200\u2013300ms ease)",
         "Part detail panel updates immediately to show: part name, component group, brand/model, condition badge, priority badge, condition notes, and its pricing results",
         "Corresponding row in the parts table is highlighted (scroll into view if needed)",
         "Clicking the active region again, or clicking outside all regions, deactivates zoom and returns photo to normal scale",
         "Only one part can be active at a time",
-        "Example: click 'Rear Derailleur' overlay → photo zooms to that area, detail panel shows Shimano Claris with 'fair' condition badge",
-        "Negative case: rapidly clicking two different part regions → second click correctly replaces first, no visual glitch"
-      ]
+        "Example: click 'Rear Derailleur' overlay \u2192 photo zooms to that area, detail panel shows Shimano Claris with 'fair' condition badge",
+        "Negative case: rapidly clicking two different part regions \u2192 second click correctly replaces first, no visual glitch"
+      ],
+      "startedAt": "2026-03-12T14:58:00.432633+00:00",
+      "completedAt": "2026-03-12T15:09:29.781623+00:00",
+      "updatedAt": "2026-03-12T15:09:29.781004+00:00"
     },
     {
       "id": "US-004",
       "title": "Part detail panel component",
-      "status": "open",
-      "dependsOn": ["US-003"],
+      "status": "done",
+      "dependsOn": [
+        "US-003"
+      ],
       "description": "As a user, I want a dedicated detail panel that shows full information for the selected part, including its pricing results, so I don't have to scan the full table.",
       "acceptanceCriteria": [
         "PartDetailPanel component receives the active part object and its pricing results as props",
         "Panel displays: part name (heading), component group, brand and model, condition badge, priority badge, condition notes (full text)",
         "Pricing section shows up to 3 Performance Bicycle results: product title (linked), price, availability",
         "If pricing results are empty, shows 'No results found on Performance Bicycle'",
-        "Panel shows a 'No part selected — click a part on the photo' placeholder when no part is active",
+        "Panel shows a 'No part selected \u2014 click a part on the photo' placeholder when no part is active",
         "On mobile (< 768px), panel renders as a bottom sheet or modal overlay instead of a side column",
         "npm run lint passes",
-        "Example: active part is a brake caliper with 2 pricing results → panel shows both with prices and links",
-        "Negative case: active part has no pricing results → panel still renders correctly with the 'no results' message"
-      ]
+        "Example: active part is a brake caliper with 2 pricing results \u2192 panel shows both with prices and links",
+        "Negative case: active part has no pricing results \u2192 panel still renders correctly with the 'no results' message"
+      ],
+      "startedAt": "2026-03-12T15:17:38.327224+00:00",
+      "completedAt": "2026-03-12T15:49:23.164244+00:00",
+      "updatedAt": "2026-03-12T15:49:23.164016+00:00"
     },
     {
       "id": "US-005",
-      "title": "Reanalysis button — trigger fresh Claude Vision call",
-      "status": "open",
-      "dependsOn": ["US-001"],
+      "title": "Reanalysis button \u2014 trigger fresh Claude Vision call",
+      "status": "done",
+      "dependsOn": [
+        "US-001"
+      ],
       "description": "As a user, I want a reanalysis button that sends the same uploaded photo back to Claude Vision so I can get a fresh analysis without re-uploading.",
       "acceptanceCriteria": [
         "A 'Reanalyze' button is displayed on the Results page above the bike photo",
         "Clicking the button POSTs the same image file (held in component state or re-read from a stored File object) to POST /api/analyze",
-        "During reanalysis, button shows 'Reanalyzing…' and is disabled; a loading overlay covers the photo",
+        "During reanalysis, button shows 'Reanalyzing\u2026' and is disabled; a loading overlay covers the photo",
         "On success, all analysis state is replaced: parts list, bike metadata, active selection, and pricing results are all cleared and reloaded",
         "Pricing is automatically re-fetched after reanalysis completes (same as initial flow)",
         "On error, show inline error 'Reanalysis failed. Please try again.' without losing the previous results",
         "If the user navigated to results from a fresh upload, the original File object is available in React Router state for reuse",
         "npm test includes a test that the reanalysis endpoint call is made with the correct content type",
-        "Example: click Reanalyze → loading overlay → new parts appear (may differ from first run)",
-        "Negative case: reanalysis fails due to network error → previous results remain visible with error message shown"
-      ]
+        "Example: click Reanalyze \u2192 loading overlay \u2192 new parts appear (may differ from first run)",
+        "Negative case: reanalysis fails due to network error \u2192 previous results remain visible with error message shown"
+      ],
+      "startedAt": "2026-03-12T15:28:10.994865+00:00",
+      "completedAt": "2026-03-12T15:38:40.690384+00:00",
+      "updatedAt": "2026-03-12T15:38:40.689905+00:00"
     },
     {
       "id": "US-006",
-      "title": "Responsive layout refinement — desktop and mobile web",
-      "status": "open",
-      "dependsOn": ["US-003", "US-004"],
+      "title": "Responsive layout refinement \u2014 desktop and mobile web",
+      "status": "done",
+      "dependsOn": [
+        "US-003",
+        "US-004"
+      ],
       "description": "As a user, I want the app to be fully usable on both desktop (1280px+) and mobile web (375px) so I can use it on the go.",
       "acceptanceCriteria": [
-        "Desktop (≥1024px): two-column layout — left column: photo with overlays + reanalyze button; right column: part detail panel + scrollable parts table",
-        "Tablet (768–1023px): same two-column layout, narrower columns",
-        "Mobile (<768px): single column — photo full width on top, part detail panel (bottom sheet on click), parts table below",
+        "Desktop (\u22651024px): two-column layout \u2014 left column: photo with overlays + reanalyze button; right column: part detail panel + scrollable parts table",
+        "Tablet (768\u20131023px): same two-column layout, narrower columns",
+        "Mobile (<768px): single column \u2014 photo full width on top, part detail panel (bottom sheet on click), parts table below",
         "No horizontal scroll at any breakpoint from 375px to 1920px",
         "Touch targets for part overlay regions are at least 44x44px on mobile (overlay region minimum size enforced)",
         "Bottom sheet on mobile slides up with animation when a part is selected, dismisses on tap outside",
         "Parts table on mobile uses a condensed single-line row format (name + priority badge only, expand on tap for details)",
         "npm run lint passes",
-        "Example: open on iPhone SE (375px) → upload works, results display in single column, tapping a region opens bottom sheet",
-        "Negative case: rotate device to landscape (667px) → layout switches to two-column mid-width, no overflow"
-      ]
+        "Example: open on iPhone SE (375px) \u2192 upload works, results display in single column, tapping a region opens bottom sheet",
+        "Negative case: rotate device to landscape (667px) \u2192 layout switches to two-column mid-width, no overflow"
+      ],
+      "startedAt": "2026-03-12T15:49:25.894109+00:00",
+      "completedAt": "2026-03-12T15:57:34.043727+00:00",
+      "updatedAt": "2026-03-12T15:57:34.043118+00:00"
     }
   ]
 }

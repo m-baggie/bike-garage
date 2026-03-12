@@ -33,10 +33,12 @@ Each part object in "parts" must have:
 - "priority_label": string (one of: Immediate, Soon, Monitor, OK, New)
 - "search_query": string (suggested search query to find replacement part)
 - "visible_in_image": boolean
+- "boundingBox": object or null — normalized bounding box of the part within the image. If the part is visible and you can identify a region, provide { "x": number, "y": number, "width": number, "height": number } where all values are 0.0–1.0 relative to image dimensions. x and y are the top-left corner of the bounding region; width and height are the region dimensions. If the part is not visible or the region cannot be determined, set boundingBox to null.
 
 Identify 5-10 visible parts. Use component groups: Drivetrain, Brakes, Wheels, Handlebars/Cockpit, Saddle/Seatpost, Frame/Fork, Accessories.
 Priority scale: 1=Immediate, 2=Soon, 3=Monitor, 4=OK, 5=New.
 Condition values: excellent, good, fair, poor, unknown.
+Parts with visible_in_image=false must have boundingBox: null.
 
 Return ONLY the JSON object. No other text.`;
 
@@ -156,6 +158,30 @@ app.post('/api/analyze', (req, res, next) => {
     const missingKeys = REQUIRED_TOP_LEVEL_KEYS.filter((k) => !(k in analysis));
     if (missingKeys.length > 0) {
       return res.status(502).json({ error: `Analysis failed: missing required keys: ${missingKeys.join(', ')}` });
+    }
+
+    // Validate and normalise boundingBox on each part
+    if (Array.isArray(analysis.parts)) {
+      for (const part of analysis.parts) {
+        if (part.boundingBox !== null && part.boundingBox !== undefined) {
+          const bb = part.boundingBox;
+          const valid =
+            typeof bb === 'object' &&
+            typeof bb.x === 'number' && bb.x >= 0 && bb.x <= 1 &&
+            typeof bb.y === 'number' && bb.y >= 0 && bb.y <= 1 &&
+            typeof bb.width === 'number' && bb.width >= 0 && bb.width <= 1 &&
+            typeof bb.height === 'number' && bb.height >= 0 && bb.height <= 1;
+          if (!valid) {
+            part.boundingBox = null;
+          }
+        } else {
+          part.boundingBox = null;
+        }
+        // Ensure parts not visible in image always have null boundingBox
+        if (part.visible_in_image === false) {
+          part.boundingBox = null;
+        }
+      }
     }
 
     res.json(analysis);

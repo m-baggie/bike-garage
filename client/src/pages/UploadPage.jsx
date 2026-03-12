@@ -143,7 +143,7 @@ export default function UploadPage() {
       const response = await axios.post('/api/analyze', formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
       })
-      navigate('/results', { state: { result: response.data, photoUrl: preview } })
+      navigate('/results', { state: { result: response.data, photoUrl: preview, file } })
     } catch {
       setError('Analysis failed. Please try again.')
     } finally {

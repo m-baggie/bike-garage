@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "total": 6,
+  "remaining": 4,
+  "quality_gates": [
+    "npm run lint",
+    "npm test"
+  ],
+  "id": "US-003",
+  "title": "Click a part region to highlight, zoom, and show detail panel"
+}

@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "total": 6,
+  "remaining": 1,
+  "quality_gates": [
+    "npm run lint",
+    "npm test"
+  ],
+  "id": "US-006",
+  "title": "Responsive layout refinement \u2014 desktop and mobile web"
+}

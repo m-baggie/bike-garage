@@ -1,0 +1,11 @@
+{
+  "ok": true,
+  "total": 6,
+  "remaining": 3,
+  "quality_gates": [
+    "npm run lint",
+    "npm test"
+  ],
+  "id": "US-005",
+  "title": "Reanalysis button \u2014 trigger fresh Claude Vision call"
+}
